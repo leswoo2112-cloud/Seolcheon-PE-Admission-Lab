@@ -1,1124 +1,406 @@
 /* =========================================================
-   설천고 PE PERFORMANCE LAB PRO
-   events.js
+   설천고 PE PERFORMANCE LAB
+   EVENTS.JS
    VERSION 3.0
 
-   운동 / 체대입시 종목 데이터베이스
-
-   IMPORTANT
+   역할
    ---------------------------------------------------------
-   app.js 에서 아래 전역변수를 사용한다.
+   1. 체대입시 종목 데이터
+   2. 종목 카테고리
+   3. 종목별 측정 능력
+   4. 종목별 핵심 관절
+   5. 종목별 분석 기준
+   6. 추천 훈련 데이터
 
-   window.SC_EVENT_CATEGORIES
-   window.SC_EVENTS
-   window.SC_EVENT_UTILS
+   ※ 버튼 이벤트는 app.js에서 처리
 ========================================================= */
 
 "use strict";
 
 
 /* =========================================================
-   01. CATEGORY DATABASE
+   01. EVENT CATEGORIES
 ========================================================= */
 
-window.SC_EVENT_CATEGORIES = [
-
+window.PE_EVENT_CATEGORIES = [
   {
     id: "all",
-    name: "전체",
-    icon: "◈"
+    name: "전체"
   },
-
-  {
-    id: "bodyweight",
-    name: "맨몸",
-    icon: "◎"
-  },
-
-  {
-    id: "lower",
-    name: "하체",
-    icon: "▽"
-  },
-
-  {
-    id: "upper",
-    name: "상체",
-    icon: "△"
-  },
-
-  {
-    id: "core",
-    name: "코어",
-    icon: "◇"
-  },
-
   {
     id: "jump",
-    name: "점프",
-    icon: "↑"
+    name: "점프"
   },
-
   {
-    id: "running",
-    name: "달리기",
-    icon: "➜"
+    id: "run",
+    name: "달리기"
   },
-
+  {
+    id: "throw",
+    name: "던지기"
+  },
+  {
+    id: "strength",
+    name: "근력"
+  },
   {
     id: "agility",
-    name: "민첩성",
-    icon: "↯"
+    name: "민첩성"
   },
-
   {
-    id: "pe",
-    name: "체대입시",
-    icon: "◆"
+    id: "flexibility",
+    name: "유연성"
+  },
+  {
+    id: "endurance",
+    name: "지구력"
   }
-
 ];
 
 
 /* =========================================================
-   02. EVENT DATABASE
+   02. EVENT DATA
 ========================================================= */
 
-window.SC_EVENTS = [
-
-  /* =======================================================
-     BODYWEIGHT
-  ======================================================= */
-
-  {
-    id: "squat",
-
-    name: "스쿼트",
-
-    category: "bodyweight",
-
-    icon: "◎",
-
-    description:
-      "고관절·무릎·발목과 몸통 정렬을 분석합니다.",
-
-    movementType: "squat",
-
-    primaryJoint: "knee",
-
-    repCounter: true,
-
-    analysis: [
-      "kneeAngle",
-      "hipAngle",
-      "ankleAngle",
-      "trunkAngle",
-      "symmetry",
-      "depth",
-      "trajectory"
-    ],
-
-    phases: [
-      "READY",
-      "DESCENT",
-      "BOTTOM",
-      "ASCENT",
-      "COMPLETE"
-    ],
-
-    ideal: {
-      kneeMin: 65,
-      kneeMax: 175,
-      trunkMax: 45,
-      symmetryMax: 12
-    }
-  },
-
-
-  {
-    id: "bodyweight_deep_squat",
-
-    name: "딥 스쿼트",
-
-    category: "bodyweight",
-
-    icon: "◎",
-
-    description:
-      "깊은 스쿼트의 가동범위와 좌우 안정성을 분석합니다.",
-
-    movementType: "squat",
-
-    primaryJoint: "knee",
-
-    repCounter: true,
-
-    analysis: [
-      "kneeAngle",
-      "hipAngle",
-      "ankleAngle",
-      "trunkAngle",
-      "symmetry",
-      "depth"
-    ],
-
-    phases: [
-      "READY",
-      "DESCENT",
-      "BOTTOM",
-      "ASCENT",
-      "COMPLETE"
-    ],
-
-    ideal: {
-      kneeMin: 50,
-      kneeMax: 175,
-      trunkMax: 50,
-      symmetryMax: 12
-    }
-  },
-
-
-  {
-    id: "forward_lunge",
-
-    name: "포워드 런지",
-
-    category: "bodyweight",
-
-    icon: "◒",
-
-    description:
-      "앞쪽 무릎 정렬과 골반 안정성을 분석합니다.",
-
-    movementType: "lunge",
-
-    primaryJoint: "knee",
-
-    repCounter: true,
-
-    analysis: [
-      "kneeAngle",
-      "hipAngle",
-      "ankleAngle",
-      "trunkAngle",
-      "symmetry",
-      "balance"
-    ],
-
-    phases: [
-      "READY",
-      "STEP",
-      "DESCENT",
-      "BOTTOM",
-      "RETURN"
-    ],
-
-    ideal: {
-      kneeMin: 70,
-      kneeMax: 175,
-      trunkMax: 25,
-      symmetryMax: 15
-    }
-  },
-
-
-  {
-    id: "reverse_lunge",
-
-    name: "리버스 런지",
-
-    category: "bodyweight",
-
-    icon: "◐",
-
-    description:
-      "뒤로 이동하는 런지 동작의 안정성과 관절각을 분석합니다.",
-
-    movementType: "lunge",
-
-    primaryJoint: "knee",
-
-    repCounter: true,
-
-    analysis: [
-      "kneeAngle",
-      "hipAngle",
-      "trunkAngle",
-      "symmetry",
-      "balance"
-    ],
-
-    phases: [
-      "READY",
-      "STEP BACK",
-      "DESCENT",
-      "BOTTOM",
-      "RETURN"
-    ],
-
-    ideal: {
-      kneeMin: 70,
-      kneeMax: 175,
-      trunkMax: 25,
-      symmetryMax: 15
-    }
-  },
-
-
-  {
-    id: "split_squat",
-
-    name: "스플릿 스쿼트",
-
-    category: "bodyweight",
-
-    icon: "◑",
-
-    description:
-      "좌우 다리의 독립적인 안정성과 움직임을 분석합니다.",
-
-    movementType: "lunge",
-
-    primaryJoint: "knee",
-
-    repCounter: true,
-
-    analysis: [
-      "kneeAngle",
-      "hipAngle",
-      "ankleAngle",
-      "symmetry",
-      "balance"
-    ],
-
-    phases: [
-      "READY",
-      "DESCENT",
-      "BOTTOM",
-      "ASCENT",
-      "COMPLETE"
-    ],
-
-    ideal: {
-      kneeMin: 65,
-      kneeMax: 175,
-      trunkMax: 25,
-      symmetryMax: 15
-    }
-  },
-
-
-  {
-    id: "pushup",
-
-    name: "푸시업",
-
-    category: "bodyweight",
-
-    icon: "▬",
-
-    description:
-      "팔꿈치 각도와 몸통 정렬을 분석합니다.",
-
-    movementType: "pushup",
-
-    primaryJoint: "elbow",
-
-    repCounter: true,
-
-    analysis: [
-      "elbowAngle",
-      "shoulderAngle",
-      "trunkAlignment",
-      "symmetry"
-    ],
-
-    phases: [
-      "TOP",
-      "DESCENT",
-      "BOTTOM",
-      "ASCENT",
-      "COMPLETE"
-    ],
-
-    ideal: {
-      elbowMin: 70,
-      elbowMax: 170,
-      symmetryMax: 12
-    }
-  },
-
-
-  {
-    id: "burpee",
-
-    name: "버피",
-
-    category: "bodyweight",
-
-    icon: "↕",
-
-    description:
-      "전신 움직임의 속도·안정성·동작 연결을 분석합니다.",
-
-    movementType: "burpee",
-
-    primaryJoint: "hip",
-
-    repCounter: true,
-
-    analysis: [
-      "kneeAngle",
-      "hipAngle",
-      "trunkAngle",
-      "speed",
-      "coordination"
-    ],
-
-    phases: [
-      "STAND",
-      "DOWN",
-      "PLANK",
-      "RETURN",
-      "JUMP"
-    ]
-  },
-
-
-  /* =======================================================
-     LOWER BODY
-  ======================================================= */
-
-  {
-    id: "single_leg_squat",
-
-    name: "싱글 레그 스쿼트",
-
-    category: "lower",
-
-    icon: "◉",
-
-    description:
-      "한쪽 다리의 무릎 안정성과 골반 균형을 분석합니다.",
-
-    movementType: "singleLegSquat",
-
-    primaryJoint: "knee",
-
-    repCounter: true,
-
-    analysis: [
-      "kneeAngle",
-      "hipAngle",
-      "pelvisStability",
-      "balance"
-    ],
-
-    phases: [
-      "READY",
-      "DESCENT",
-      "BOTTOM",
-      "ASCENT"
-    ]
-  },
-
-
-  {
-    id: "step_up",
-
-    name: "스텝업",
-
-    category: "lower",
-
-    icon: "▟",
-
-    description:
-      "한쪽 다리의 추진력과 골반 안정성을 분석합니다.",
-
-    movementType: "step",
-
-    primaryJoint: "knee",
-
-    repCounter: true,
-
-    analysis: [
-      "kneeAngle",
-      "hipAngle",
-      "balance",
-      "power"
-    ],
-
-    phases: [
-      "READY",
-      "STEP",
-      "PUSH",
-      "TOP",
-      "RETURN"
-    ]
-  },
-
-
-  {
-    id: "calf_raise",
-
-    name: "카프레이즈",
-
-    category: "lower",
-
-    icon: "↑",
-
-    description:
-      "발목 가동범위와 반복 동작을 분석합니다.",
-
-    movementType: "calfRaise",
-
-    primaryJoint: "ankle",
-
-    repCounter: true,
-
-    analysis: [
-      "ankleAngle",
-      "balance",
-      "range"
-    ],
-
-    phases: [
-      "BOTTOM",
-      "ASCENT",
-      "TOP",
-      "DESCENT"
-    ]
-  },
-
-
-  {
-    id: "wall_sit",
-
-    name: "월싯",
-
-    category: "lower",
-
-    icon: "□",
-
-    description:
-      "정적 스쿼트 자세의 무릎각과 몸통 안정성을 분석합니다.",
-
-    movementType: "hold",
-
-    primaryJoint: "knee",
-
-    repCounter: false,
-
-    analysis: [
-      "kneeAngle",
-      "hipAngle",
-      "trunkAngle",
-      "stability"
-    ],
-
-    phases: [
-      "HOLD"
-    ]
-  },
-
-
-  /* =======================================================
-     UPPER BODY
-  ======================================================= */
-
-  {
-    id: "shoulder_flexion",
-
-    name: "어깨 굴곡",
-
-    category: "upper",
-
-    icon: "↑",
-
-    description:
-      "팔을 들어 올릴 때 어깨 가동범위를 분석합니다.",
-
-    movementType: "mobility",
-
-    primaryJoint: "shoulder",
-
-    repCounter: false,
-
-    analysis: [
-      "shoulderAngle",
-      "symmetry",
-      "range"
-    ],
-
-    phases: [
-      "START",
-      "RAISE",
-      "TOP"
-    ]
-  },
-
-
-  {
-    id: "arm_raise",
-
-    name: "양팔 올리기",
-
-    category: "upper",
-
-    icon: "Y",
-
-    description:
-      "양쪽 어깨 움직임과 좌우 대칭성을 분석합니다.",
-
-    movementType: "mobility",
-
-    primaryJoint: "shoulder",
-
-    repCounter: true,
-
-    analysis: [
-      "shoulderAngle",
-      "elbowAngle",
-      "symmetry"
-    ],
-
-    phases: [
-      "DOWN",
-      "RAISE",
-      "TOP",
-      "LOWER"
-    ]
-  },
-
-
-  {
-    id: "dip",
-
-    name: "딥스",
-
-    category: "upper",
-
-    icon: "↓",
-
-    description:
-      "팔꿈치와 어깨의 움직임 및 좌우 균형을 분석합니다.",
-
-    movementType: "dip",
-
-    primaryJoint: "elbow",
-
-    repCounter: true,
-
-    analysis: [
-      "elbowAngle",
-      "shoulderAngle",
-      "symmetry"
-    ],
-
-    phases: [
-      "TOP",
-      "DESCENT",
-      "BOTTOM",
-      "ASCENT"
-    ]
-  },
-
-
-  /* =======================================================
-     CORE
-  ======================================================= */
-
-  {
-    id: "plank",
-
-    name: "플랭크",
-
-    category: "core",
-
-    icon: "━",
-
-    description:
-      "어깨·골반·발목의 정렬과 몸통 안정성을 분석합니다.",
-
-    movementType: "hold",
-
-    primaryJoint: "trunk",
-
-    repCounter: false,
-
-    analysis: [
-      "trunkAlignment",
-      "hipAlignment",
-      "stability"
-    ],
-
-    phases: [
-      "HOLD"
-    ]
-  },
-
-
-  {
-    id: "side_plank",
-
-    name: "사이드 플랭크",
-
-    category: "core",
-
-    icon: "╱",
-
-    description:
-      "측면 코어 안정성과 몸통 정렬을 분석합니다.",
-
-    movementType: "hold",
-
-    primaryJoint: "trunk",
-
-    repCounter: false,
-
-    analysis: [
-      "trunkAlignment",
-      "shoulderAlignment",
-      "stability"
-    ],
-
-    phases: [
-      "HOLD"
-    ]
-  },
-
-
-  {
-    id: "situp",
-
-    name: "윗몸일으키기",
-
-    category: "core",
-
-    icon: "⌒",
-
-    description:
-      "체대입시 윗몸일으키기 동작과 반복 횟수를 분석합니다.",
-
-    movementType: "situp",
-
-    primaryJoint: "hip",
-
-    repCounter: true,
-
-    analysis: [
-      "hipAngle",
-      "trunkAngle",
-      "tempo",
-      "repSpeed"
-    ],
-
-    phases: [
-      "DOWN",
-      "ASCENT",
-      "TOP",
-      "DESCENT"
-    ]
-  },
-
-
-  {
-    id: "crunch",
-
-    name: "크런치",
-
-    category: "core",
-
-    icon: "⌒",
-
-    description:
-      "몸통 굴곡 범위와 반복 리듬을 분석합니다.",
-
-    movementType: "situp",
-
-    primaryJoint: "trunk",
-
-    repCounter: true,
-
-    analysis: [
-      "trunkAngle",
-      "tempo"
-    ],
-
-    phases: [
-      "DOWN",
-      "UP",
-      "DOWN"
-    ]
-  },
-
+window.PE_EVENTS = [
 
   /* =======================================================
      JUMP
   ======================================================= */
 
   {
-    id: "vertical_jump",
-
-    name: "서전트 점프",
-
-    category: "jump",
-
-    icon: "↑",
-
-    description:
-      "점프 준비·이륙·비행·착지 동작을 분석합니다.",
-
-    movementType: "jump",
-
-    primaryJoint: "knee",
-
-    repCounter: true,
-
-    analysis: [
-      "kneeAngle",
-      "hipAngle",
-      "ankleAngle",
-      "takeoffAngle",
-      "flightTime",
-      "relativeJump",
-      "landing"
-    ],
-
-    phases: [
-      "READY",
-      "COUNTER MOVEMENT",
-      "TAKEOFF",
-      "FLIGHT",
-      "LANDING"
-    ],
-
-    ideal: {
-      trunkMax: 35,
-      symmetryMax: 12
-    }
-  },
-
-
-  {
-    id: "countermovement_jump",
-
-    name: "CMJ",
-
-    category: "jump",
-
-    icon: "↑",
-
-    description:
-      "카운터무브먼트 점프의 하강·이륙·비행을 분석합니다.",
-
-    movementType: "jump",
-
-    primaryJoint: "knee",
-
-    repCounter: true,
-
-    analysis: [
-      "kneeAngle",
-      "hipAngle",
-      "takeoff",
-      "flightTime",
-      "relativeJump"
-    ],
-
-    phases: [
-      "READY",
-      "DESCENT",
-      "BOTTOM",
-      "TAKEOFF",
-      "FLIGHT",
-      "LANDING"
-    ]
-  },
-
-
-  {
-    id: "squat_jump",
-
-    name: "스쿼트 점프",
-
-    category: "jump",
-
-    icon: "↥",
-
-    description:
-      "정지 스쿼트 자세에서의 점프 추진 동작을 분석합니다.",
-
-    movementType: "jump",
-
-    primaryJoint: "knee",
-
-    repCounter: true,
-
-    analysis: [
-      "kneeAngle",
-      "hipAngle",
-      "takeoff",
-      "flightTime",
-      "landing"
-    ],
-
-    phases: [
-      "READY",
-      "SQUAT",
-      "TAKEOFF",
-      "FLIGHT",
-      "LANDING"
-    ]
-  },
-
-
-  {
-    id: "broad_jump",
+    id: "standing-long-jump",
 
     name: "제자리멀리뛰기",
 
     category: "jump",
 
-    icon: "➜",
+    categoryName: "점프",
+
+    icon: "↗",
+
+    ability: "순발력 · 하체 파워",
 
     description:
-      "체대입시 제자리멀리뛰기의 이륙각·비행·착지를 분석합니다.",
+      "도약 준비부터 착지까지의 움직임을 분석합니다.",
 
-    movementType: "horizontalJump",
+    mainMetrics: [
+      "점프 높이",
+      "수평 이동",
+      "이륙각",
+      "고관절 각도",
+      "무릎 각도",
+      "착지 안정성"
+    ],
 
-    primaryJoint: "hip",
-
-    repCounter: true,
-
-    analysis: [
-      "kneeAngle",
-      "hipAngle",
-      "trunkAngle",
-      "takeoffAngle",
-      "trajectory",
-      "landing"
+    keyJoints: [
+      "hip",
+      "knee",
+      "ankle",
+      "shoulder"
     ],
 
     phases: [
-      "READY",
-      "COUNTER MOVEMENT",
-      "TAKEOFF",
-      "FLIGHT",
-      "LANDING"
+      "준비",
+      "반동",
+      "이륙",
+      "비행",
+      "착지"
+    ],
+
+    ideal: {
+      takeoffAngle: {
+        min: 25,
+        max: 45
+      },
+
+      kneePreparation: {
+        min: 80,
+        max: 130
+      },
+
+      symmetryTolerance: 12
+    },
+
+    training: [
+      "박스 점프",
+      "스쿼트 점프",
+      "브로드 점프",
+      "하체 반응성 점프",
+      "착지 안정화 훈련"
     ]
   },
 
 
   {
-    id: "box_jump",
+    id: "vertical-jump",
 
-    name: "박스 점프",
-
-    category: "jump",
-
-    icon: "▟",
-
-    description:
-      "이륙과 착지 자세 및 무릎 안정성을 분석합니다.",
-
-    movementType: "jump",
-
-    primaryJoint: "knee",
-
-    repCounter: true,
-
-    analysis: [
-      "kneeAngle",
-      "hipAngle",
-      "takeoff",
-      "landing",
-      "symmetry"
-    ],
-
-    phases: [
-      "READY",
-      "TAKEOFF",
-      "FLIGHT",
-      "LANDING"
-    ]
-  },
-
-
-  {
-    id: "single_leg_jump",
-
-    name: "싱글 레그 점프",
+    name: "서전트 점프",
 
     category: "jump",
+
+    categoryName: "점프",
 
     icon: "↑",
 
+    ability: "수직 점프 · 폭발적 파워",
+
     description:
-      "한발 점프의 추진과 착지 안정성을 분석합니다.",
+      "수직 도약 높이와 이륙 자세를 분석합니다.",
 
-    movementType: "jump",
+    mainMetrics: [
+      "점프 높이",
+      "비행시간",
+      "이륙 속도",
+      "무릎 신전",
+      "고관절 신전",
+      "팔 스윙"
+    ],
 
-    primaryJoint: "knee",
-
-    repCounter: true,
-
-    analysis: [
-      "kneeAngle",
-      "hipAngle",
-      "balance",
-      "landing"
+    keyJoints: [
+      "hip",
+      "knee",
+      "ankle",
+      "shoulder"
     ],
 
     phases: [
-      "READY",
-      "TAKEOFF",
-      "FLIGHT",
-      "LANDING"
+      "준비",
+      "카운터무브먼트",
+      "이륙",
+      "최고점",
+      "착지"
+    ],
+
+    ideal: {
+      symmetryTolerance: 10
+    },
+
+    training: [
+      "카운터무브먼트 점프",
+      "박스 점프",
+      "포고 점프",
+      "스쿼트",
+      "점프 착지 훈련"
+    ]
+  },
+
+
+  {
+    id: "running-long-jump",
+
+    name: "도움닫기 멀리뛰기",
+
+    category: "jump",
+
+    categoryName: "점프",
+
+    icon: "➜",
+
+    ability: "스피드 · 도약력",
+
+    description:
+      "도움닫기 속도와 발구름 타이밍을 분석합니다.",
+
+    mainMetrics: [
+      "접근 속도",
+      "발구름 각도",
+      "이륙각",
+      "비행시간",
+      "착지"
+    ],
+
+    keyJoints: [
+      "hip",
+      "knee",
+      "ankle"
+    ],
+
+    phases: [
+      "접근",
+      "마지막 스텝",
+      "발구름",
+      "비행",
+      "착지"
+    ],
+
+    ideal: {
+      takeoffAngle: {
+        min: 15,
+        max: 30
+      }
+    },
+
+    training: [
+      "20m 가속주",
+      "바운딩",
+      "싱글 레그 점프",
+      "발구름 드릴",
+      "착지 드릴"
     ]
   },
 
 
   /* =======================================================
-     RUNNING
+     RUN
   ======================================================= */
 
   {
-    id: "sprint",
+    id: "50m",
 
-    name: "스프린트",
+    name: "50m 달리기",
 
-    category: "running",
+    category: "run",
 
-    icon: "➜",
+    categoryName: "달리기",
+
+    icon: "⚡",
+
+    ability: "가속 · 최고속도",
 
     description:
-      "달리기 자세·케이던스·상체 기울기·보폭 패턴을 분석합니다.",
+      "스타트와 가속 구간의 움직임을 분석합니다.",
 
-    movementType: "running",
+    mainMetrics: [
+      "케이던스",
+      "스텝 수",
+      "몸통 각도",
+      "무릎 드라이브",
+      "접지 패턴",
+      "좌우 대칭"
+    ],
 
-    primaryJoint: "knee",
-
-    repCounter: false,
-
-    analysis: [
-      "kneeAngle",
-      "hipAngle",
-      "trunkAngle",
-      "cadence",
-      "stride",
-      "symmetry"
+    keyJoints: [
+      "hip",
+      "knee",
+      "ankle",
+      "shoulder"
     ],
 
     phases: [
-      "CONTACT",
-      "MID STANCE",
-      "TOE OFF",
-      "FLIGHT"
+      "스타트",
+      "초기가속",
+      "가속",
+      "최고속도",
+      "피니시"
+    ],
+
+    ideal: {
+      symmetryTolerance: 8
+    },
+
+    training: [
+      "10m 스타트",
+      "20m 가속주",
+      "A스킵",
+      "하이니",
+      "바운딩"
     ]
   },
 
 
   {
-    id: "sprint_start",
+    id: "100m",
 
-    name: "스프린트 스타트",
+    name: "100m 달리기",
 
-    category: "running",
+    category: "run",
 
-    icon: "↗",
+    categoryName: "달리기",
+
+    icon: "⚡",
+
+    ability: "스피드 · 가속",
 
     description:
-      "출발 자세와 초기 가속 동작을 분석합니다.",
+      "질주 자세와 케이던스, 좌우 움직임을 분석합니다.",
 
-    movementType: "sprintStart",
+    mainMetrics: [
+      "케이던스",
+      "스텝 수",
+      "몸통 기울기",
+      "고관절 움직임",
+      "무릎 드라이브",
+      "좌우 대칭"
+    ],
 
-    primaryJoint: "hip",
-
-    repCounter: false,
-
-    analysis: [
-      "kneeAngle",
-      "hipAngle",
-      "trunkAngle",
-      "acceleration",
-      "firstStep"
+    keyJoints: [
+      "hip",
+      "knee",
+      "ankle",
+      "shoulder"
     ],
 
     phases: [
-      "SET",
-      "PUSH",
-      "FIRST STEP",
-      "ACCELERATION"
+      "스타트",
+      "가속",
+      "최고속도",
+      "속도유지",
+      "피니시"
+    ],
+
+    ideal: {
+      symmetryTolerance: 8
+    },
+
+    training: [
+      "30m 가속주",
+      "플라잉 스프린트",
+      "A스킵",
+      "바운딩",
+      "스프린트 자세 드릴"
     ]
   },
 
 
   {
-    id: "high_knee",
+    id: "20m-shuttle-run",
 
-    name: "하이니",
+    name: "20m 왕복 오래달리기",
 
-    category: "running",
+    category: "endurance",
 
-    icon: "↟",
+    categoryName: "지구력",
+
+    icon: "⇆",
+
+    ability: "심폐지구력 · 방향전환",
 
     description:
-      "무릎 상승 높이와 좌우 리듬을 분석합니다.",
+      "반복 달리기와 방향전환 동작을 분석합니다.",
 
-    movementType: "runningDrill",
+    mainMetrics: [
+      "턴 시간",
+      "스텝 수",
+      "감속 자세",
+      "방향전환",
+      "몸통 안정성"
+    ],
 
-    primaryJoint: "hip",
-
-    repCounter: true,
-
-    analysis: [
-      "hipAngle",
-      "kneeAngle",
-      "cadence",
-      "symmetry"
+    keyJoints: [
+      "hip",
+      "knee",
+      "ankle"
     ],
 
     phases: [
-      "CONTACT",
-      "DRIVE",
-      "TOP",
-      "RETURN"
-    ]
-  },
-
-
-  {
-    id: "a_skip",
-
-    name: "A-Skip",
-
-    category: "running",
-
-    icon: "↗",
-
-    description:
-      "러닝 드릴의 무릎 드라이브와 리듬을 분석합니다.",
-
-    movementType: "runningDrill",
-
-    primaryJoint: "hip",
-
-    repCounter: true,
-
-    analysis: [
-      "hipAngle",
-      "kneeAngle",
-      "cadence",
-      "coordination"
+      "가속",
+      "주행",
+      "감속",
+      "턴",
+      "재가속"
     ],
 
-    phases: [
-      "CONTACT",
-      "DRIVE",
-      "FLIGHT",
-      "CONTACT"
+    ideal: {
+      symmetryTolerance: 10
+    },
+
+    training: [
+      "셔틀런",
+      "인터벌 러닝",
+      "턴 드릴",
+      "감속 드릴",
+      "코어 안정화"
     ]
   },
 
@@ -1128,693 +410,990 @@ window.SC_EVENTS = [
   ======================================================= */
 
   {
-    id: "side_shuffle",
+    id: "10m-shuttle",
 
-    name: "사이드 셔플",
-
-    category: "agility",
-
-    icon: "↔",
-
-    description:
-      "좌우 이동과 무릎·골반 안정성을 분석합니다.",
-
-    movementType: "agility",
-
-    primaryJoint: "knee",
-
-    repCounter: false,
-
-    analysis: [
-      "kneeAngle",
-      "hipAngle",
-      "lateralMovement",
-      "balance"
-    ],
-
-    phases: [
-      "READY",
-      "PUSH",
-      "MOVE",
-      "BRAKE"
-    ]
-  },
-
-
-  {
-    id: "change_direction",
-
-    name: "방향전환",
+    name: "10m 왕복달리기",
 
     category: "agility",
 
-    icon: "↯",
-
-    description:
-      "감속·방향전환·재가속 동작을 분석합니다.",
-
-    movementType: "agility",
-
-    primaryJoint: "knee",
-
-    repCounter: false,
-
-    analysis: [
-      "kneeAngle",
-      "hipAngle",
-      "trunkAngle",
-      "braking",
-      "acceleration"
-    ],
-
-    phases: [
-      "APPROACH",
-      "BRAKING",
-      "CUT",
-      "ACCELERATION"
-    ]
-  },
-
-
-  {
-    id: "shuttle_run",
-
-    name: "왕복달리기",
-
-    category: "agility",
+    categoryName: "민첩성",
 
     icon: "⇆",
 
+    ability: "민첩성 · 가속 · 감속",
+
     description:
-      "왕복 구간의 감속·턴·재가속 움직임을 분석합니다.",
+      "빠른 방향전환과 재가속 능력을 분석합니다.",
 
-    movementType: "agility",
+    mainMetrics: [
+      "턴 시간",
+      "감속",
+      "재가속",
+      "몸통 기울기",
+      "무릎 안정성"
+    ],
 
-    primaryJoint: "knee",
-
-    repCounter: true,
-
-    analysis: [
-      "turn",
-      "kneeAngle",
-      "trunkAngle",
-      "acceleration"
+    keyJoints: [
+      "hip",
+      "knee",
+      "ankle"
     ],
 
     phases: [
-      "RUN",
-      "BRAKE",
-      "TURN",
-      "ACCELERATE"
+      "출발",
+      "가속",
+      "감속",
+      "턴",
+      "재가속"
+    ],
+
+    ideal: {
+      symmetryTolerance: 10
+    },
+
+    training: [
+      "5-10-5 셔틀",
+      "콘 터치",
+      "사이드 셔플",
+      "감속 훈련",
+      "방향전환 드릴"
+    ]
+  },
+
+
+  {
+    id: "side-step",
+
+    name: "사이드스텝",
+
+    category: "agility",
+
+    categoryName: "민첩성",
+
+    icon: "↔",
+
+    ability: "측면 민첩성",
+
+    description:
+      "좌우 이동 속도와 자세 안정성을 분석합니다.",
+
+    mainMetrics: [
+      "좌우 이동",
+      "케이던스",
+      "고관절 각도",
+      "무릎 안정성",
+      "몸통 흔들림"
+    ],
+
+    keyJoints: [
+      "hip",
+      "knee",
+      "ankle"
+    ],
+
+    phases: [
+      "중앙",
+      "좌측 이동",
+      "전환",
+      "우측 이동",
+      "전환"
+    ],
+
+    ideal: {
+      symmetryTolerance: 8
+    },
+
+    training: [
+      "사이드 셔플",
+      "밴드 사이드 워크",
+      "라테랄 홉",
+      "코어 안정화",
+      "콘 드릴"
+    ]
+  },
+
+
+  {
+    id: "zigzag-run",
+
+    name: "지그재그 달리기",
+
+    category: "agility",
+
+    categoryName: "민첩성",
+
+    icon: "〽",
+
+    ability: "방향전환 · 민첩성",
+
+    description:
+      "연속 방향전환 시 신체 기울기와 감속 능력을 분석합니다.",
+
+    mainMetrics: [
+      "방향전환 각도",
+      "감속",
+      "재가속",
+      "몸통 기울기",
+      "좌우 대칭"
+    ],
+
+    keyJoints: [
+      "hip",
+      "knee",
+      "ankle"
+    ],
+
+    phases: [
+      "접근",
+      "감속",
+      "컷",
+      "재가속"
+    ],
+
+    ideal: {
+      symmetryTolerance: 10
+    },
+
+    training: [
+      "콘 지그재그",
+      "45도 컷",
+      "90도 컷",
+      "싱글 레그 밸런스",
+      "감속 드릴"
     ]
   },
 
 
   /* =======================================================
-     PE ENTRANCE EXAM
+     THROW
   ======================================================= */
 
   {
-    id: "pe_vertical_jump",
-
-    name: "체대입시 서전트 점프",
-
-    category: "pe",
-
-    icon: "◆",
-
-    description:
-      "체대입시 서전트 점프의 준비·이륙·착지를 분석합니다.",
-
-    movementType: "jump",
-
-    primaryJoint: "knee",
-
-    repCounter: true,
-
-    peTest: true,
-
-    ability: "순발력",
-
-    analysis: [
-      "kneeAngle",
-      "hipAngle",
-      "takeoffAngle",
-      "flightTime",
-      "relativeJump"
-    ],
-
-    phases: [
-      "READY",
-      "COUNTER MOVEMENT",
-      "TAKEOFF",
-      "FLIGHT",
-      "LANDING"
-    ]
-  },
-
-
-  {
-    id: "pe_broad_jump",
-
-    name: "체대입시 제자리멀리뛰기",
-
-    category: "pe",
-
-    icon: "◆",
-
-    description:
-      "이륙각과 신체중심 궤적, 착지 자세를 분석합니다.",
-
-    movementType: "horizontalJump",
-
-    primaryJoint: "hip",
-
-    repCounter: true,
-
-    peTest: true,
-
-    ability: "순발력",
-
-    analysis: [
-      "kneeAngle",
-      "hipAngle",
-      "trunkAngle",
-      "takeoffAngle",
-      "trajectory",
-      "landing"
-    ],
-
-    phases: [
-      "READY",
-      "LOAD",
-      "TAKEOFF",
-      "FLIGHT",
-      "LANDING"
-    ]
-  },
-
-
-  {
-    id: "pe_situp",
-
-    name: "체대입시 윗몸일으키기",
-
-    category: "pe",
-
-    icon: "◆",
-
-    description:
-      "반복 횟수·리듬·몸통 움직임을 분석합니다.",
-
-    movementType: "situp",
-
-    primaryJoint: "hip",
-
-    repCounter: true,
-
-    peTest: true,
-
-    ability: "근지구력",
-
-    analysis: [
-      "hipAngle",
-      "trunkAngle",
-      "repSpeed",
-      "tempo"
-    ],
-
-    phases: [
-      "DOWN",
-      "ASCENT",
-      "TOP",
-      "DESCENT"
-    ]
-  },
-
-
-  {
-    id: "pe_shuttle",
-
-    name: "체대입시 10m 왕복달리기",
-
-    category: "pe",
-
-    icon: "◆",
-
-    description:
-      "턴 동작·감속·재가속 패턴을 분석합니다.",
-
-    movementType: "agility",
-
-    primaryJoint: "knee",
-
-    repCounter: true,
-
-    peTest: true,
-
-    ability: "민첩성",
-
-    analysis: [
-      "turn",
-      "kneeAngle",
-      "trunkAngle",
-      "acceleration"
-    ],
-
-    phases: [
-      "RUN",
-      "BRAKE",
-      "TURN",
-      "ACCELERATE"
-    ]
-  },
-
-
-  {
-    id: "pe_side_step",
-
-    name: "사이드스텝",
-
-    category: "pe",
-
-    icon: "◆",
-
-    description:
-      "좌우 이동 속도와 신체중심 이동을 분석합니다.",
-
-    movementType: "agility",
-
-    primaryJoint: "knee",
-
-    repCounter: true,
-
-    peTest: true,
-
-    ability: "민첩성",
-
-    analysis: [
-      "lateralMovement",
-      "kneeAngle",
-      "centerMovement",
-      "cadence"
-    ],
-
-    phases: [
-      "CENTER",
-      "LEFT",
-      "CENTER",
-      "RIGHT"
-    ]
-  },
-
-
-  {
-    id: "pe_medicine_ball",
+    id: "medicine-ball",
 
     name: "메디신볼 던지기",
 
-    category: "pe",
+    category: "throw",
 
-    icon: "◆",
+    categoryName: "던지기",
+
+    icon: "●",
+
+    ability: "상체 파워 · 전신 협응",
 
     description:
-      "하체-몸통-상체로 이어지는 힘 전달 동작을 분석합니다.",
+      "하체에서 상체로 전달되는 힘과 릴리스 동작을 분석합니다.",
 
-    movementType: "throw",
+    mainMetrics: [
+      "몸통 회전",
+      "어깨 각도",
+      "팔꿈치 각도",
+      "릴리스 타이밍",
+      "하체 사용"
+    ],
 
-    primaryJoint: "shoulder",
-
-    repCounter: true,
-
-    peTest: true,
-
-    ability: "파워",
-
-    analysis: [
-      "shoulderAngle",
-      "elbowAngle",
-      "hipAngle",
-      "trunkAngle",
-      "sequence"
+    keyJoints: [
+      "shoulder",
+      "elbow",
+      "hip",
+      "knee"
     ],
 
     phases: [
-      "READY",
-      "LOAD",
-      "DRIVE",
-      "RELEASE",
-      "FOLLOW THROUGH"
+      "준비",
+      "로딩",
+      "가속",
+      "릴리스",
+      "팔로스루"
+    ],
+
+    ideal: {
+      symmetryTolerance: 12
+    },
+
+    training: [
+      "메디신볼 체스트 패스",
+      "오버헤드 스로우",
+      "로테이션 스로우",
+      "코어 회전 운동",
+      "푸시프레스"
     ]
   },
 
 
   {
-    id: "pe_20m_sprint",
+    id: "softball-throw",
 
-    name: "20m 스프린트",
+    name: "소프트볼 던지기",
 
-    category: "pe",
+    category: "throw",
 
-    icon: "◆",
+    categoryName: "던지기",
+
+    icon: "◉",
+
+    ability: "투척력 · 협응",
 
     description:
-      "출발과 초기 가속, 러닝 자세를 분석합니다.",
+      "팔과 몸통의 회전 및 릴리스 타이밍을 분석합니다.",
 
-    movementType: "running",
+    mainMetrics: [
+      "어깨 회전",
+      "팔꿈치 각도",
+      "몸통 회전",
+      "릴리스",
+      "팔로스루"
+    ],
 
-    primaryJoint: "hip",
-
-    repCounter: false,
-
-    peTest: true,
-
-    ability: "스피드",
-
-    analysis: [
-      "trunkAngle",
-      "hipAngle",
-      "kneeAngle",
-      "cadence",
-      "acceleration"
+    keyJoints: [
+      "shoulder",
+      "elbow",
+      "hip"
     ],
 
     phases: [
-      "START",
-      "DRIVE",
-      "ACCELERATION",
-      "SPRINT"
+      "준비",
+      "백스윙",
+      "가속",
+      "릴리스",
+      "팔로스루"
+    ],
+
+    ideal: {
+      symmetryTolerance: 15
+    },
+
+    training: [
+      "밴드 외회전",
+      "메디신볼 스로우",
+      "스텝 스로우",
+      "코어 회전",
+      "견갑 안정화"
+    ]
+  },
+
+
+  /* =======================================================
+     STRENGTH
+  ======================================================= */
+
+  {
+    id: "sit-up",
+
+    name: "윗몸일으키기",
+
+    category: "strength",
+
+    categoryName: "근력",
+
+    icon: "⌁",
+
+    ability: "복근 근지구력",
+
+    description:
+      "반복 횟수와 몸통 움직임 패턴을 분석합니다.",
+
+    mainMetrics: [
+      "반복 횟수",
+      "반복 속도",
+      "몸통 각도",
+      "좌우 대칭",
+      "리듬"
+    ],
+
+    keyJoints: [
+      "shoulder",
+      "hip",
+      "knee"
+    ],
+
+    phases: [
+      "하강",
+      "바닥",
+      "상승",
+      "완료"
+    ],
+
+    ideal: {
+      symmetryTolerance: 10
+    },
+
+    training: [
+      "크런치",
+      "데드버그",
+      "플랭크",
+      "할로우 홀드",
+      "코어 서킷"
+    ]
+  },
+
+
+  {
+    id: "push-up",
+
+    name: "팔굽혀펴기",
+
+    category: "strength",
+
+    categoryName: "근력",
+
+    icon: "━",
+
+    ability: "상체 근지구력",
+
+    description:
+      "팔꿈치 굽힘과 몸통 정렬을 분석합니다.",
+
+    mainMetrics: [
+      "반복 횟수",
+      "팔꿈치 각도",
+      "몸통 정렬",
+      "반복 속도",
+      "좌우 대칭"
+    ],
+
+    keyJoints: [
+      "shoulder",
+      "elbow",
+      "hip"
+    ],
+
+    phases: [
+      "상단",
+      "하강",
+      "하단",
+      "상승"
+    ],
+
+    ideal: {
+      elbowBottom: {
+        min: 65,
+        max: 100
+      },
+
+      symmetryTolerance: 10
+    },
+
+    training: [
+      "푸시업",
+      "템포 푸시업",
+      "플랭크",
+      "덤벨 프레스",
+      "견갑 푸시업"
+    ]
+  },
+
+
+  {
+    id: "pull-up",
+
+    name: "턱걸이",
+
+    category: "strength",
+
+    categoryName: "근력",
+
+    icon: "↑",
+
+    ability: "상체 당기기 근력",
+
+    description:
+      "팔꿈치와 어깨 움직임 및 반복 동작을 분석합니다.",
+
+    mainMetrics: [
+      "반복 횟수",
+      "팔꿈치 각도",
+      "어깨 움직임",
+      "몸통 흔들림",
+      "좌우 대칭"
+    ],
+
+    keyJoints: [
+      "shoulder",
+      "elbow",
+      "hip"
+    ],
+
+    phases: [
+      "하단",
+      "상승",
+      "상단",
+      "하강"
+    ],
+
+    ideal: {
+      symmetryTolerance: 10
+    },
+
+    training: [
+      "밴드 풀업",
+      "랫풀다운",
+      "인버티드 로우",
+      "데드행",
+      "스캡 풀업"
+    ]
+  },
+
+
+  {
+    id: "squat",
+
+    name: "스쿼트",
+
+    category: "strength",
+
+    categoryName: "근력",
+
+    icon: "⌄",
+
+    ability: "하체 근력 · 움직임 평가",
+
+    description:
+      "고관절, 무릎, 발목의 움직임과 좌우 대칭을 분석합니다.",
+
+    mainMetrics: [
+      "스쿼트 깊이",
+      "무릎 각도",
+      "고관절 각도",
+      "발목 각도",
+      "몸통 기울기",
+      "좌우 대칭"
+    ],
+
+    keyJoints: [
+      "hip",
+      "knee",
+      "ankle",
+      "shoulder"
+    ],
+
+    phases: [
+      "시작",
+      "하강",
+      "최저점",
+      "상승",
+      "완료"
+    ],
+
+    ideal: {
+      kneeBottom: {
+        min: 65,
+        max: 110
+      },
+
+      symmetryTolerance: 10
+    },
+
+    training: [
+      "고블릿 스쿼트",
+      "템포 스쿼트",
+      "스플릿 스쿼트",
+      "발목 가동성",
+      "코어 안정화"
+    ]
+  },
+
+
+  /* =======================================================
+     FLEXIBILITY
+  ======================================================= */
+
+  {
+    id: "sit-and-reach",
+
+    name: "좌전굴",
+
+    category: "flexibility",
+
+    categoryName: "유연성",
+
+    icon: "⌒",
+
+    ability: "햄스트링 · 허리 유연성",
+
+    description:
+      "몸통 전굴과 고관절 움직임을 분석합니다.",
+
+    mainMetrics: [
+      "몸통 각도",
+      "고관절 굴곡",
+      "무릎 유지",
+      "좌우 대칭"
+    ],
+
+    keyJoints: [
+      "shoulder",
+      "hip",
+      "knee"
+    ],
+
+    phases: [
+      "준비",
+      "전굴",
+      "최대 도달",
+      "복귀"
+    ],
+
+    ideal: {
+      symmetryTolerance: 10
+    },
+
+    training: [
+      "햄스트링 스트레칭",
+      "고관절 힌지",
+      "종아리 스트레칭",
+      "동적 유연성",
+      "고관절 가동성"
+    ]
+  },
+
+
+  {
+    id: "trunk-flexion",
+
+    name: "체전굴",
+
+    category: "flexibility",
+
+    categoryName: "유연성",
+
+    icon: "↓",
+
+    ability: "후면사슬 유연성",
+
+    description:
+      "고관절과 몸통의 전굴 패턴을 분석합니다.",
+
+    mainMetrics: [
+      "고관절 굴곡",
+      "몸통 각도",
+      "무릎 각도",
+      "좌우 대칭"
+    ],
+
+    keyJoints: [
+      "shoulder",
+      "hip",
+      "knee"
+    ],
+
+    phases: [
+      "준비",
+      "하강",
+      "최대 전굴",
+      "복귀"
+    ],
+
+    ideal: {
+      symmetryTolerance: 10
+    },
+
+    training: [
+      "햄스트링 스트레칭",
+      "제퍼슨 컬 가동성",
+      "고관절 힌지 드릴",
+      "종아리 스트레칭"
     ]
   }
-
 ];
 
 
 /* =========================================================
-   03. EVENT UTILITIES
+   03. EVENT MAP
 ========================================================= */
 
-window.SC_EVENT_UTILS = {
+window.PE_EVENT_MAP = {};
 
+window.PE_EVENTS.forEach(function (event) {
+  window.PE_EVENT_MAP[event.id] = event;
+});
 
-  /* -------------------------------------------------------
-     GET EVENT
-  ------------------------------------------------------- */
 
-  getEvent(id) {
+/* =========================================================
+   04. EVENT HELPERS
+========================================================= */
 
-    return window.SC_EVENTS.find(
-      event => event.id === id
-    ) || null;
+/**
+ * ID로 종목 찾기
+ */
+window.getPEEventById = function (eventId) {
 
-  },
-
-
-  /* -------------------------------------------------------
-     GET CATEGORY
-  ------------------------------------------------------- */
-
-  getCategory(id) {
-
-    return window.SC_EVENT_CATEGORIES.find(
-      category => category.id === id
-    ) || null;
-
-  },
-
-
-  /* -------------------------------------------------------
-     EVENTS BY CATEGORY
-  ------------------------------------------------------- */
-
-  getEventsByCategory(category) {
-
-    if (!category || category === "all") {
-
-      return [...window.SC_EVENTS];
-
-    }
-
-    return window.SC_EVENTS.filter(
-      event => event.category === category
-    );
-
-  },
-
-
-  /* -------------------------------------------------------
-     SEARCH
-  ------------------------------------------------------- */
-
-  searchEvents(keyword) {
-
-    const query =
-      String(keyword || "")
-        .trim()
-        .toLowerCase();
-
-    if (!query) {
-
-      return [...window.SC_EVENTS];
-
-    }
-
-    return window.SC_EVENTS.filter(event => {
-
-      const text = [
-        event.name,
-        event.category,
-        event.description,
-        event.ability || "",
-        ...(event.analysis || [])
-      ]
-        .join(" ")
-        .toLowerCase();
-
-      return text.includes(query);
-
-    });
-
-  },
-
-
-  /* -------------------------------------------------------
-     FILTER
-  ------------------------------------------------------- */
-
-  filterEvents(category, keyword) {
-
-    let result =
-      this.getEventsByCategory(category);
-
-    const query =
-      String(keyword || "")
-        .trim()
-        .toLowerCase();
-
-    if (!query) {
-
-      return result;
-
-    }
-
-    return result.filter(event => {
-
-      const text = [
-        event.name,
-        event.description,
-        event.ability || ""
-      ]
-        .join(" ")
-        .toLowerCase();
-
-      return text.includes(query);
-
-    });
-
-  },
-
-
-  /* -------------------------------------------------------
-     REP SUPPORT
-  ------------------------------------------------------- */
-
-  supportsRepCounter(eventId) {
-
-    const event =
-      this.getEvent(eventId);
-
-    return Boolean(
-      event &&
-      event.repCounter
-    );
-
-  },
-
-
-  /* -------------------------------------------------------
-     PE TEST
-  ------------------------------------------------------- */
-
-  isPETest(eventId) {
-
-    const event =
-      this.getEvent(eventId);
-
-    return Boolean(
-      event &&
-      event.peTest
-    );
-
-  },
-
-
-  /* -------------------------------------------------------
-     MOVEMENT TYPE
-  ------------------------------------------------------- */
-
-  getMovementType(eventId) {
-
-    const event =
-      this.getEvent(eventId);
-
-    return event
-      ? event.movementType
-      : "general";
-
-  },
-
-
-  /* -------------------------------------------------------
-     PHASES
-  ------------------------------------------------------- */
-
-  getPhases(eventId) {
-
-    const event =
-      this.getEvent(eventId);
-
-    if (!event) {
-
-      return [
-        "READY",
-        "MOVING",
-        "COMPLETE"
-      ];
-
-    }
-
-    return event.phases || [
-      "READY",
-      "MOVING",
-      "COMPLETE"
-    ];
-
-  },
-
-
-  /* -------------------------------------------------------
-     PRIMARY JOINT
-  ------------------------------------------------------- */
-
-  getPrimaryJoint(eventId) {
-
-    const event =
-      this.getEvent(eventId);
-
-    return event
-      ? event.primaryJoint
-      : "knee";
-
-  },
-
-
-  /* -------------------------------------------------------
-     IDEAL RANGE
-  ------------------------------------------------------- */
-
-  getIdealRange(eventId) {
-
-    const event =
-      this.getEvent(eventId);
-
-    if (!event) {
-
-      return {};
-
-    }
-
-    return event.ideal || {};
-
-  },
-
-
-  /* -------------------------------------------------------
-     RANDOM / DEFAULT EVENT
-  ------------------------------------------------------- */
-
-  getDefaultEvent() {
-
-    return this.getEvent("squat");
-
-  },
-
-
-  /* -------------------------------------------------------
-     EVENT COUNT
-  ------------------------------------------------------- */
-
-  getCount() {
-
-    return window.SC_EVENTS.length;
-
+  if (!eventId) {
+    return null;
   }
 
+  return window.PE_EVENT_MAP[eventId] || null;
+};
+
+
+/**
+ * 카테고리 이름 반환
+ */
+window.getPECategoryName = function (categoryId) {
+
+  const category =
+    window.PE_EVENT_CATEGORIES.find(function (item) {
+      return item.id === categoryId;
+    });
+
+  return category
+    ? category.name
+    : "";
+};
+
+
+/**
+ * 카테고리 필터
+ */
+window.getPEEventsByCategory = function (categoryId) {
+
+  if (!categoryId || categoryId === "all") {
+    return [...window.PE_EVENTS];
+  }
+
+  return window.PE_EVENTS.filter(function (event) {
+    return event.category === categoryId;
+  });
+};
+
+
+/**
+ * 종목 검색
+ */
+window.searchPEEvents = function (keyword) {
+
+  const search =
+    String(keyword || "")
+      .trim()
+      .toLowerCase();
+
+  if (!search) {
+    return [...window.PE_EVENTS];
+  }
+
+  return window.PE_EVENTS.filter(function (event) {
+
+    const searchableText = [
+      event.name,
+      event.categoryName,
+      event.ability,
+      event.description,
+      ...(event.mainMetrics || [])
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    return searchableText.includes(search);
+  });
 };
 
 
 /* =========================================================
-   04. DEVELOPMENT VALIDATION
-
-   같은 ID가 두 개 들어가면 콘솔에 오류 표시.
+   05. ANALYSIS METRIC LABELS
 ========================================================= */
 
-(function validateEventDatabase() {
+window.PE_METRIC_LABELS = {
 
-  const ids = new Set();
+  speed: "스피드",
 
-  window.SC_EVENTS.forEach(event => {
+  power: "파워",
 
-    if (!event.id) {
+  agility: "민첩성",
 
-      console.error(
-        "[EVENT DATABASE] ID가 없는 종목:",
-        event
-      );
+  stability: "안정성",
 
-      return;
+  symmetry: "대칭성",
 
+  technique: "기술"
+};
+
+
+/* =========================================================
+   06. JOINT LABELS
+========================================================= */
+
+window.PE_JOINT_LABELS = {
+
+  shoulder: "어깨",
+
+  elbow: "팔꿈치",
+
+  wrist: "손목",
+
+  hip: "고관절",
+
+  knee: "무릎",
+
+  ankle: "발목"
+};
+
+
+/* =========================================================
+   07. SCORE GRADE
+========================================================= */
+
+window.getPerformanceGrade = function (score) {
+
+  const value = Number(score) || 0;
+
+  if (value >= 95) {
+    return "S+";
+  }
+
+  if (value >= 90) {
+    return "S";
+  }
+
+  if (value >= 85) {
+    return "A+";
+  }
+
+  if (value >= 80) {
+    return "A";
+  }
+
+  if (value >= 75) {
+    return "B+";
+  }
+
+  if (value >= 70) {
+    return "B";
+  }
+
+  if (value >= 60) {
+    return "C";
+  }
+
+  return "D";
+};
+
+
+/* =========================================================
+   08. SCORE DESCRIPTION
+========================================================= */
+
+window.getPerformanceDescription = function (score) {
+
+  const value = Number(score) || 0;
+
+  if (value >= 90) {
+    return "매우 우수한 움직임 패턴입니다.";
+  }
+
+  if (value >= 80) {
+    return "전반적으로 우수하며 일부 세부 동작을 개선할 수 있습니다.";
+  }
+
+  if (value >= 70) {
+    return "기본적인 수행은 안정적이며 기술적인 개선 여지가 있습니다.";
+  }
+
+  if (value >= 60) {
+    return "일부 움직임에서 자세와 안정성 개선이 필요합니다.";
+  }
+
+  return "기초 움직임 패턴부터 단계적으로 교정하는 것이 좋습니다.";
+};
+
+
+/* =========================================================
+   09. EVENT FEEDBACK GENERATOR
+========================================================= */
+
+window.createEventFeedback = function (
+  event,
+  metrics,
+  angles
+) {
+
+  const feedback = [];
+
+  if (!event) {
+    return feedback;
+  }
+
+
+  const symmetry =
+    Number(metrics?.symmetry || 0);
+
+  const stability =
+    Number(metrics?.stability || 0);
+
+  const technique =
+    Number(metrics?.technique || 0);
+
+  const power =
+    Number(metrics?.power || 0);
+
+
+  if (symmetry >= 85) {
+
+    feedback.push({
+      type: "good",
+      title: "좌우 대칭성이 좋습니다.",
+      text:
+        "좌우 관절 움직임의 차이가 비교적 작게 나타났습니다."
+    });
+
+  } else {
+
+    feedback.push({
+      type: "warning",
+      title: "좌우 움직임 차이를 확인하세요.",
+      text:
+        "왼쪽과 오른쪽의 관절각 또는 움직임 타이밍 차이가 나타났습니다."
+    });
+
+  }
+
+
+  if (stability >= 85) {
+
+    feedback.push({
+      type: "good",
+      title: "자세 안정성이 좋습니다.",
+      text:
+        "동작 중 신체 중심의 흔들림이 비교적 안정적입니다."
+    });
+
+  } else {
+
+    feedback.push({
+      type: "warning",
+      title: "신체 중심 안정성을 개선하세요.",
+      text:
+        "동작 중 몸통 또는 신체 중심 이동이 크게 나타날 수 있습니다."
+    });
+
+  }
+
+
+  if (technique >= 85) {
+
+    feedback.push({
+      type: "good",
+      title: "기술 수행이 안정적입니다.",
+      text:
+        event.name +
+        "의 주요 동작 패턴이 비교적 안정적으로 나타났습니다."
+    });
+
+  } else {
+
+    feedback.push({
+      type: "info",
+      title: "종목별 핵심 자세를 점검하세요.",
+      text:
+        event.name +
+        "에서 중요한 관절 위치와 타이밍을 핵심 프레임에서 확인하세요."
+    });
+
+  }
+
+
+  if (
+    event.category === "jump" &&
+    power < 80
+  ) {
+
+    feedback.push({
+      type: "info",
+      title: "도약 파워 개선",
+      text:
+        "하체의 빠른 신전과 팔 스윙 타이밍을 함께 개선하면 도약 효율을 높이는 데 도움이 됩니다."
+    });
+  }
+
+
+  if (
+    event.category === "run" ||
+    event.category === "agility"
+  ) {
+
+    feedback.push({
+      type: "info",
+      title: "접지와 재가속 확인",
+      text:
+        "발이 몸에서 지나치게 멀리 떨어져 접지되는지와 방향전환 후 첫 스텝을 확인하세요."
+    });
+  }
+
+
+  if (
+    event.category === "strength"
+  ) {
+
+    feedback.push({
+      type: "info",
+      title: "반복 자세 유지",
+      text:
+        "횟수가 증가해도 초기 반복과 비슷한 관절각과 몸통 정렬을 유지하는 것이 중요합니다."
+    });
+  }
+
+
+  return feedback;
+};
+
+
+/* =========================================================
+   10. TRAINING GENERATOR
+========================================================= */
+
+window.getEventTrainingRecommendations =
+function (event) {
+
+  if (!event) {
+    return [];
+  }
+
+  return (event.training || []).map(
+    function (trainingName, index) {
+
+      return {
+        title:
+          (index + 1) +
+          ". " +
+          trainingName,
+
+        description:
+          event.name +
+          " 수행 능력 향상을 위한 추천 훈련입니다."
+      };
     }
-
-    if (ids.has(event.id)) {
-
-      console.error(
-        "[EVENT DATABASE] 중복 ID:",
-        event.id
-      );
-
-      return;
-
-    }
-
-    ids.add(event.id);
-
-  });
-
-
-  console.log(
-    `%c[SC EVENTS] ${window.SC_EVENTS.length}개 종목 로드 완료`,
-    "color:#39c6ff;font-weight:bold;"
   );
+};
 
-})();
+
+/* =========================================================
+   11. EVENT SELECT OPTIONS
+========================================================= */
+
+window.createPEEventOptions =
+function () {
+
+  return window.PE_EVENTS
+    .map(function (event) {
+
+      return (
+        '<option value="' +
+        event.id +
+        '">' +
+        event.name +
+        "</option>"
+      );
+
+    })
+    .join("");
+};
+
+
+/* =========================================================
+   12. DEVELOPMENT CHECK
+========================================================= */
+
+console.log(
+  "[PE PERFORMANCE LAB] events.js loaded:",
+  window.PE_EVENTS.length,
+  "events"
+);
