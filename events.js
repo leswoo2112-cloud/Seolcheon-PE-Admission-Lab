@@ -1,28 +1,25 @@
 /* =========================================================
-   설천고 PE PERFORMANCE LAB
-   EVENTS.JS
-   VERSION 3.0
+   SEOLCHEON HIGH SCHOOL
+   PE PERFORMANCE LAB — FINAL 3.0
+   events.js
 
    역할
-   ---------------------------------------------------------
    1. 체대입시 종목 데이터
    2. 종목 카테고리
-   3. 종목별 측정 능력
+   3. 종목별 분석 능력
    4. 종목별 핵심 관절
    5. 종목별 분석 기준
-   6. 추천 훈련 데이터
-
-   ※ 버튼 이벤트는 app.js에서 처리
+   6. 영상 자세분석과 연결
 ========================================================= */
 
 "use strict";
 
 
 /* =========================================================
-   01. EVENT CATEGORIES
+   01. EVENT CATEGORY
 ========================================================= */
 
-window.PE_EVENT_CATEGORIES = [
+const EVENT_CATEGORIES = [
   {
     id: "all",
     name: "전체"
@@ -32,37 +29,45 @@ window.PE_EVENT_CATEGORIES = [
     name: "점프"
   },
   {
-    id: "run",
-    name: "달리기"
-  },
-  {
-    id: "throw",
-    name: "던지기"
-  },
-  {
-    id: "strength",
-    name: "근력"
+    id: "speed",
+    name: "스피드"
   },
   {
     id: "agility",
     name: "민첩성"
   },
   {
-    id: "flexibility",
-    name: "유연성"
+    id: "power",
+    name: "근파워"
+  },
+  {
+    id: "strength",
+    name: "근력"
   },
   {
     id: "endurance",
     name: "지구력"
+  },
+  {
+    id: "throw",
+    name: "투척"
+  },
+  {
+    id: "flexibility",
+    name: "유연성"
+  },
+  {
+    id: "coordination",
+    name: "협응"
   }
 ];
 
 
 /* =========================================================
-   02. EVENT DATA
+   02. PE EVENT DATA
 ========================================================= */
 
-window.PE_EVENTS = [
+const PE_EVENTS = [
 
   /* =======================================================
      JUMP
@@ -73,32 +78,53 @@ window.PE_EVENTS = [
 
     name: "제자리멀리뛰기",
 
+    shortName: "제멀",
+
     category: "jump",
 
     categoryName: "점프",
 
-    icon: "↗",
-
     ability: "순발력 · 하체 파워",
 
     description:
-      "도약 준비부터 착지까지의 움직임을 분석합니다.",
+      "준비자세부터 이륙, 비행, 착지까지 전 구간을 분석합니다.",
+
+    icon: "↗",
+
+    analysisType: "jump",
 
     mainMetrics: [
-      "점프 높이",
-      "수평 이동",
-      "이륙각",
-      "고관절 각도",
-      "무릎 각도",
-      "착지 안정성"
+      "jumpPower",
+      "takeoffAngle",
+      "hipExtension",
+      "kneeExtension",
+      "armSwing",
+      "landingStability"
     ],
 
     keyJoints: [
+      "shoulder",
       "hip",
       "knee",
-      "ankle",
-      "shoulder"
+      "ankle"
     ],
+
+    targetAngles: {
+      preparationKnee: [85, 120],
+      preparationHip: [70, 120],
+      takeoffKnee: [150, 180],
+      takeoffHip: [150, 180],
+      takeoffAngle: [28, 45]
+    },
+
+    weights: {
+      speed: 10,
+      power: 30,
+      agility: 5,
+      stability: 15,
+      symmetry: 15,
+      technique: 25
+    },
 
     phases: [
       "준비",
@@ -108,26 +134,20 @@ window.PE_EVENTS = [
       "착지"
     ],
 
-    ideal: {
-      takeoffAngle: {
-        min: 25,
-        max: 45
-      },
-
-      kneePreparation: {
-        min: 80,
-        max: 130
-      },
-
-      symmetryTolerance: 12
-    },
+    feedbackFocus: [
+      "무릎 굴곡",
+      "고관절 사용",
+      "팔 스윙",
+      "이륙각",
+      "착지 안정성"
+    ],
 
     training: [
-      "박스 점프",
       "스쿼트 점프",
       "브로드 점프",
-      "하체 반응성 점프",
-      "착지 안정화 훈련"
+      "박스 점프",
+      "힙 익스텐션",
+      "팔 스윙 점프"
     ]
   },
 
@@ -137,270 +157,227 @@ window.PE_EVENTS = [
 
     name: "서전트 점프",
 
+    shortName: "서전트",
+
     category: "jump",
 
     categoryName: "점프",
 
-    icon: "↑",
-
-    ability: "수직 점프 · 폭발적 파워",
+    ability: "수직 점프력 · 순발력",
 
     description:
-      "수직 도약 높이와 이륙 자세를 분석합니다.",
+      "신체중심 상승과 하체 신전 타이밍을 분석합니다.",
+
+    icon: "↑",
+
+    analysisType: "jump",
 
     mainMetrics: [
-      "점프 높이",
-      "비행시간",
-      "이륙 속도",
-      "무릎 신전",
-      "고관절 신전",
-      "팔 스윙"
+      "jumpHeight",
+      "flightTime",
+      "kneeExtension",
+      "hipExtension",
+      "armSwing"
     ],
 
     keyJoints: [
+      "shoulder",
       "hip",
       "knee",
-      "ankle",
-      "shoulder"
+      "ankle"
     ],
+
+    targetAngles: {
+      preparationKnee: [80, 120],
+      takeoffKnee: [155, 180],
+      takeoffHip: [155, 180]
+    },
+
+    weights: {
+      speed: 5,
+      power: 35,
+      agility: 5,
+      stability: 15,
+      symmetry: 15,
+      technique: 25
+    },
 
     phases: [
       "준비",
-      "카운터무브먼트",
+      "하강",
+      "전환",
       "이륙",
       "최고점",
       "착지"
     ],
 
-    ideal: {
-      symmetryTolerance: 10
-    },
+    feedbackFocus: [
+      "반동 깊이",
+      "무릎 신전",
+      "고관절 신전",
+      "팔 스윙",
+      "착지"
+    ],
 
     training: [
-      "카운터무브먼트 점프",
+      "CMJ",
+      "스쿼트 점프",
       "박스 점프",
       "포고 점프",
-      "스쿼트",
-      "점프 착지 훈련"
-    ]
-  },
-
-
-  {
-    id: "running-long-jump",
-
-    name: "도움닫기 멀리뛰기",
-
-    category: "jump",
-
-    categoryName: "점프",
-
-    icon: "➜",
-
-    ability: "스피드 · 도약력",
-
-    description:
-      "도움닫기 속도와 발구름 타이밍을 분석합니다.",
-
-    mainMetrics: [
-      "접근 속도",
-      "발구름 각도",
-      "이륙각",
-      "비행시간",
-      "착지"
-    ],
-
-    keyJoints: [
-      "hip",
-      "knee",
-      "ankle"
-    ],
-
-    phases: [
-      "접근",
-      "마지막 스텝",
-      "발구름",
-      "비행",
-      "착지"
-    ],
-
-    ideal: {
-      takeoffAngle: {
-        min: 15,
-        max: 30
-      }
-    },
-
-    training: [
-      "20m 가속주",
-      "바운딩",
-      "싱글 레그 점프",
-      "발구름 드릴",
-      "착지 드릴"
+      "카프 점프"
     ]
   },
 
 
   /* =======================================================
-     RUN
+     SPEED
   ======================================================= */
 
   {
-    id: "50m",
+    id: "sprint-50",
 
     name: "50m 달리기",
 
-    category: "run",
+    shortName: "50m",
 
-    categoryName: "달리기",
+    category: "speed",
 
-    icon: "⚡",
+    categoryName: "스피드",
 
     ability: "가속 · 최고속도",
 
     description:
-      "스타트와 가속 구간의 움직임을 분석합니다.",
+      "출발 자세, 가속 구간, 케이던스와 몸통 각도를 분석합니다.",
+
+    icon: "≫",
+
+    analysisType: "sprint",
 
     mainMetrics: [
-      "케이던스",
-      "스텝 수",
-      "몸통 각도",
-      "무릎 드라이브",
-      "접지 패턴",
-      "좌우 대칭"
+      "cadence",
+      "stepCount",
+      "trunkAngle",
+      "kneeDrive",
+      "groundContact",
+      "symmetry"
     ],
 
     keyJoints: [
-      "hip",
-      "knee",
-      "ankle",
-      "shoulder"
-    ],
-
-    phases: [
-      "스타트",
-      "초기가속",
-      "가속",
-      "최고속도",
-      "피니시"
-    ],
-
-    ideal: {
-      symmetryTolerance: 8
-    },
-
-    training: [
-      "10m 스타트",
-      "20m 가속주",
-      "A스킵",
-      "하이니",
-      "바운딩"
-    ]
-  },
-
-
-  {
-    id: "100m",
-
-    name: "100m 달리기",
-
-    category: "run",
-
-    categoryName: "달리기",
-
-    icon: "⚡",
-
-    ability: "스피드 · 가속",
-
-    description:
-      "질주 자세와 케이던스, 좌우 움직임을 분석합니다.",
-
-    mainMetrics: [
-      "케이던스",
-      "스텝 수",
-      "몸통 기울기",
-      "고관절 움직임",
-      "무릎 드라이브",
-      "좌우 대칭"
-    ],
-
-    keyJoints: [
-      "hip",
-      "knee",
-      "ankle",
-      "shoulder"
-    ],
-
-    phases: [
-      "스타트",
-      "가속",
-      "최고속도",
-      "속도유지",
-      "피니시"
-    ],
-
-    ideal: {
-      symmetryTolerance: 8
-    },
-
-    training: [
-      "30m 가속주",
-      "플라잉 스프린트",
-      "A스킵",
-      "바운딩",
-      "스프린트 자세 드릴"
-    ]
-  },
-
-
-  {
-    id: "20m-shuttle-run",
-
-    name: "20m 왕복 오래달리기",
-
-    category: "endurance",
-
-    categoryName: "지구력",
-
-    icon: "⇆",
-
-    ability: "심폐지구력 · 방향전환",
-
-    description:
-      "반복 달리기와 방향전환 동작을 분석합니다.",
-
-    mainMetrics: [
-      "턴 시간",
-      "스텝 수",
-      "감속 자세",
-      "방향전환",
-      "몸통 안정성"
-    ],
-
-    keyJoints: [
+      "shoulder",
       "hip",
       "knee",
       "ankle"
     ],
 
-    phases: [
-      "가속",
-      "주행",
-      "감속",
-      "턴",
-      "재가속"
-    ],
-
-    ideal: {
-      symmetryTolerance: 10
+    targetAngles: {
+      accelerationTrunk: [35, 60],
+      kneeDrive: [70, 110],
+      supportKnee: [145, 180]
     },
 
+    weights: {
+      speed: 35,
+      power: 20,
+      agility: 10,
+      stability: 5,
+      symmetry: 10,
+      technique: 20
+    },
+
+    phases: [
+      "출발",
+      "초기 가속",
+      "가속",
+      "최고속도",
+      "피니시"
+    ],
+
+    feedbackFocus: [
+      "출발각",
+      "몸통 기울기",
+      "무릎 드라이브",
+      "발 접지",
+      "팔 동작"
+    ],
+
     training: [
-      "셔틀런",
-      "인터벌 러닝",
-      "턴 드릴",
-      "감속 드릴",
-      "코어 안정화"
+      "10m 스타트",
+      "20m 가속질주",
+      "A-Skip",
+      "바운딩",
+      "스프린트 드릴"
+    ]
+  },
+
+
+  {
+    id: "sprint-100",
+
+    name: "100m 달리기",
+
+    shortName: "100m",
+
+    category: "speed",
+
+    categoryName: "스피드",
+
+    ability: "스피드 · 가속 유지",
+
+    description:
+      "가속과 최고속도 구간의 자세 효율을 분석합니다.",
+
+    icon: "➜",
+
+    analysisType: "sprint",
+
+    mainMetrics: [
+      "cadence",
+      "stride",
+      "trunkAngle",
+      "kneeDrive",
+      "symmetry",
+      "speed"
+    ],
+
+    keyJoints: [
+      "shoulder",
+      "hip",
+      "knee",
+      "ankle"
+    ],
+
+    weights: {
+      speed: 40,
+      power: 15,
+      agility: 5,
+      stability: 5,
+      symmetry: 10,
+      technique: 25
+    },
+
+    phases: [
+      "스타트",
+      "가속",
+      "전환",
+      "최고속도",
+      "속도 유지",
+      "피니시"
+    ],
+
+    feedbackFocus: [
+      "가속 자세",
+      "케이던스",
+      "보폭",
+      "상체 안정",
+      "좌우 대칭"
+    ],
+
+    training: [
+      "플라잉 스프린트",
+      "30m 가속",
+      "바운딩",
+      "A-Skip",
+      "힙 플렉서 드릴"
     ]
   },
 
@@ -410,79 +387,31 @@ window.PE_EVENTS = [
   ======================================================= */
 
   {
-    id: "10m-shuttle",
-
-    name: "10m 왕복달리기",
-
-    category: "agility",
-
-    categoryName: "민첩성",
-
-    icon: "⇆",
-
-    ability: "민첩성 · 가속 · 감속",
-
-    description:
-      "빠른 방향전환과 재가속 능력을 분석합니다.",
-
-    mainMetrics: [
-      "턴 시간",
-      "감속",
-      "재가속",
-      "몸통 기울기",
-      "무릎 안정성"
-    ],
-
-    keyJoints: [
-      "hip",
-      "knee",
-      "ankle"
-    ],
-
-    phases: [
-      "출발",
-      "가속",
-      "감속",
-      "턴",
-      "재가속"
-    ],
-
-    ideal: {
-      symmetryTolerance: 10
-    },
-
-    training: [
-      "5-10-5 셔틀",
-      "콘 터치",
-      "사이드 셔플",
-      "감속 훈련",
-      "방향전환 드릴"
-    ]
-  },
-
-
-  {
     id: "side-step",
 
     name: "사이드스텝",
 
+    shortName: "사이드스텝",
+
     category: "agility",
 
     categoryName: "민첩성",
 
-    icon: "↔",
-
-    ability: "측면 민첩성",
+    ability: "민첩성 · 방향전환",
 
     description:
-      "좌우 이동 속도와 자세 안정성을 분석합니다.",
+      "좌우 이동 속도와 중심 이동, 방향전환 자세를 분석합니다.",
+
+    icon: "↔",
+
+    analysisType: "agility",
 
     mainMetrics: [
-      "좌우 이동",
-      "케이던스",
-      "고관절 각도",
-      "무릎 안정성",
-      "몸통 흔들림"
+      "changeOfDirection",
+      "centerOfMass",
+      "kneeControl",
+      "symmetry",
+      "cadence"
     ],
 
     keyJoints: [
@@ -491,50 +420,67 @@ window.PE_EVENTS = [
       "ankle"
     ],
 
+    weights: {
+      speed: 15,
+      power: 10,
+      agility: 35,
+      stability: 15,
+      symmetry: 15,
+      technique: 10
+    },
+
     phases: [
       "중앙",
       "좌측 이동",
-      "전환",
+      "좌측 전환",
       "우측 이동",
-      "전환"
+      "우측 전환"
     ],
 
-    ideal: {
-      symmetryTolerance: 8
-    },
+    feedbackFocus: [
+      "중심 높이",
+      "발 간격",
+      "무릎 정렬",
+      "방향전환",
+      "좌우 대칭"
+    ],
 
     training: [
-      "사이드 셔플",
-      "밴드 사이드 워크",
-      "라테랄 홉",
-      "코어 안정화",
-      "콘 드릴"
+      "라인 사이드스텝",
+      "콘 셔틀",
+      "라테럴 바운드",
+      "스케이터 점프",
+      "반응 스텝"
     ]
   },
 
 
   {
-    id: "zigzag-run",
+    id: "shuttle-run",
 
-    name: "지그재그 달리기",
+    name: "왕복달리기",
+
+    shortName: "왕복달리기",
 
     category: "agility",
 
     categoryName: "민첩성",
 
-    icon: "〽",
-
-    ability: "방향전환 · 민첩성",
+    ability: "방향전환 · 스피드",
 
     description:
-      "연속 방향전환 시 신체 기울기와 감속 능력을 분석합니다.",
+      "가속, 감속, 터치, 재가속 동작을 분석합니다.",
+
+    icon: "⇆",
+
+    analysisType: "agility",
 
     mainMetrics: [
-      "방향전환 각도",
-      "감속",
-      "재가속",
-      "몸통 기울기",
-      "좌우 대칭"
+      "acceleration",
+      "deceleration",
+      "turnSpeed",
+      "trunkControl",
+      "kneeControl"
     ],
 
     keyJoints: [
@@ -543,29 +489,43 @@ window.PE_EVENTS = [
       "ankle"
     ],
 
+    weights: {
+      speed: 25,
+      power: 10,
+      agility: 30,
+      stability: 10,
+      symmetry: 10,
+      technique: 15
+    },
+
     phases: [
-      "접근",
+      "가속",
       "감속",
-      "컷",
+      "터치",
+      "회전",
       "재가속"
     ],
 
-    ideal: {
-      symmetryTolerance: 10
-    },
+    feedbackFocus: [
+      "감속 자세",
+      "중심 이동",
+      "터치 자세",
+      "회전",
+      "재가속"
+    ],
 
     training: [
-      "콘 지그재그",
-      "45도 컷",
-      "90도 컷",
-      "싱글 레그 밸런스",
-      "감속 드릴"
+      "5-10-5 셔틀",
+      "콘 턴",
+      "감속 드릴",
+      "스플릿 스텝",
+      "반응 셔틀"
     ]
   },
 
 
   /* =======================================================
-     THROW
+     POWER
   ======================================================= */
 
   {
@@ -573,23 +533,27 @@ window.PE_EVENTS = [
 
     name: "메디신볼 던지기",
 
-    category: "throw",
+    shortName: "메디신볼",
 
-    categoryName: "던지기",
+    category: "power",
+
+    categoryName: "근파워",
+
+    ability: "전신 파워",
+
+    description:
+      "하체에서 몸통과 상체로 이어지는 힘 전달 순서를 분석합니다.",
 
     icon: "●",
 
-    ability: "상체 파워 · 전신 협응",
-
-    description:
-      "하체에서 상체로 전달되는 힘과 릴리스 동작을 분석합니다.",
+    analysisType: "throw",
 
     mainMetrics: [
-      "몸통 회전",
-      "어깨 각도",
-      "팔꿈치 각도",
-      "릴리스 타이밍",
-      "하체 사용"
+      "hipDrive",
+      "trunkExtension",
+      "shoulderSpeed",
+      "releaseAngle",
+      "powerSequence"
     ],
 
     keyJoints: [
@@ -599,76 +563,37 @@ window.PE_EVENTS = [
       "knee"
     ],
 
-    phases: [
-      "준비",
-      "로딩",
-      "가속",
-      "릴리스",
-      "팔로스루"
-    ],
-
-    ideal: {
-      symmetryTolerance: 12
+    weights: {
+      speed: 10,
+      power: 35,
+      agility: 5,
+      stability: 10,
+      symmetry: 10,
+      technique: 30
     },
 
+    phases: [
+      "준비",
+      "하강",
+      "하체 신전",
+      "몸통 전달",
+      "릴리스"
+    ],
+
+    feedbackFocus: [
+      "하체 사용",
+      "고관절 신전",
+      "몸통 연결",
+      "팔 릴리스",
+      "릴리스각"
+    ],
+
     training: [
-      "메디신볼 체스트 패스",
+      "메디신볼 스쿱 스로우",
       "오버헤드 스로우",
-      "로테이션 스로우",
-      "코어 회전 운동",
-      "푸시프레스"
-    ]
-  },
-
-
-  {
-    id: "softball-throw",
-
-    name: "소프트볼 던지기",
-
-    category: "throw",
-
-    categoryName: "던지기",
-
-    icon: "◉",
-
-    ability: "투척력 · 협응",
-
-    description:
-      "팔과 몸통의 회전 및 릴리스 타이밍을 분석합니다.",
-
-    mainMetrics: [
-      "어깨 회전",
-      "팔꿈치 각도",
-      "몸통 회전",
-      "릴리스",
-      "팔로스루"
-    ],
-
-    keyJoints: [
-      "shoulder",
-      "elbow",
-      "hip"
-    ],
-
-    phases: [
-      "준비",
-      "백스윙",
-      "가속",
-      "릴리스",
-      "팔로스루"
-    ],
-
-    ideal: {
-      symmetryTolerance: 15
-    },
-
-    training: [
-      "밴드 외회전",
-      "메디신볼 스로우",
-      "스텝 스로우",
-      "코어 회전",
-      "견갑 안정화"
+      "스쿼트 투 스로우",
+      "힙 익스텐션",
+      "코어 파워 드릴"
     ]
   },
 
@@ -682,23 +607,26 @@ window.PE_EVENTS = [
 
     name: "윗몸일으키기",
 
+    shortName: "윗몸",
+
     category: "strength",
 
     categoryName: "근력",
 
-    icon: "⌁",
-
-    ability: "복근 근지구력",
+    ability: "코어 근지구력",
 
     description:
-      "반복 횟수와 몸통 움직임 패턴을 분석합니다.",
+      "반복 속도와 몸통 움직임의 일관성을 분석합니다.",
+
+    icon: "⌁",
+
+    analysisType: "repetition",
 
     mainMetrics: [
-      "반복 횟수",
-      "반복 속도",
-      "몸통 각도",
-      "좌우 대칭",
-      "리듬"
+      "repetition",
+      "tempo",
+      "trunkRange",
+      "consistency"
     ],
 
     keyJoints: [
@@ -707,16 +635,28 @@ window.PE_EVENTS = [
       "knee"
     ],
 
+    weights: {
+      speed: 10,
+      power: 10,
+      agility: 5,
+      stability: 25,
+      symmetry: 15,
+      technique: 35
+    },
+
     phases: [
       "하강",
-      "바닥",
+      "최저점",
       "상승",
-      "완료"
+      "최고점"
     ],
 
-    ideal: {
-      symmetryTolerance: 10
-    },
+    feedbackFocus: [
+      "가동범위",
+      "반복 리듬",
+      "몸통 제어",
+      "좌우 흔들림"
+    ],
 
     training: [
       "크런치",
@@ -733,163 +673,216 @@ window.PE_EVENTS = [
 
     name: "팔굽혀펴기",
 
+    shortName: "푸시업",
+
     category: "strength",
 
     categoryName: "근력",
 
-    icon: "━",
-
     ability: "상체 근지구력",
 
     description:
-      "팔꿈치 굽힘과 몸통 정렬을 분석합니다.",
+      "팔꿈치 각도와 몸통 정렬, 반복 자세를 분석합니다.",
+
+    icon: "▬",
+
+    analysisType: "repetition",
 
     mainMetrics: [
-      "반복 횟수",
-      "팔꿈치 각도",
-      "몸통 정렬",
-      "반복 속도",
-      "좌우 대칭"
+      "elbowAngle",
+      "trunkAlignment",
+      "repetition",
+      "tempo",
+      "symmetry"
     ],
 
     keyJoints: [
       "shoulder",
       "elbow",
-      "hip"
+      "hip",
+      "ankle"
     ],
+
+    weights: {
+      speed: 5,
+      power: 10,
+      agility: 5,
+      stability: 25,
+      symmetry: 20,
+      technique: 35
+    },
 
     phases: [
-      "상단",
+      "준비",
       "하강",
-      "하단",
-      "상승"
+      "최저점",
+      "상승",
+      "완전 신전"
     ],
 
-    ideal: {
-      elbowBottom: {
-        min: 65,
-        max: 100
-      },
-
-      symmetryTolerance: 10
-    },
+    feedbackFocus: [
+      "팔꿈치 각도",
+      "몸통 정렬",
+      "골반 위치",
+      "좌우 대칭",
+      "반복 리듬"
+    ],
 
     training: [
       "푸시업",
       "템포 푸시업",
       "플랭크",
-      "덤벨 프레스",
-      "견갑 푸시업"
+      "스캐풀라 푸시업",
+      "인클라인 푸시업"
     ]
   },
 
 
+  /* =======================================================
+     ENDURANCE
+  ======================================================= */
+
   {
-    id: "pull-up",
+    id: "long-run",
 
-    name: "턱걸이",
+    name: "장거리 달리기",
 
-    category: "strength",
+    shortName: "장거리",
 
-    categoryName: "근력",
+    category: "endurance",
 
-    icon: "↑",
+    categoryName: "지구력",
 
-    ability: "상체 당기기 근력",
+    ability: "심폐지구력 · 러닝 효율",
 
     description:
-      "팔꿈치와 어깨 움직임 및 반복 동작을 분석합니다.",
+      "러닝 자세의 안정성과 반복 동작 효율을 분석합니다.",
+
+    icon: "∞",
+
+    analysisType: "running",
 
     mainMetrics: [
-      "반복 횟수",
-      "팔꿈치 각도",
-      "어깨 움직임",
-      "몸통 흔들림",
-      "좌우 대칭"
+      "cadence",
+      "trunkAngle",
+      "kneeDrive",
+      "symmetry",
+      "runningEconomy"
+    ],
+
+    keyJoints: [
+      "shoulder",
+      "hip",
+      "knee",
+      "ankle"
+    ],
+
+    weights: {
+      speed: 15,
+      power: 5,
+      agility: 5,
+      stability: 20,
+      symmetry: 20,
+      technique: 35
+    },
+
+    phases: [
+      "접지",
+      "지지",
+      "밀기",
+      "회수",
+      "스윙"
+    ],
+
+    feedbackFocus: [
+      "몸통 자세",
+      "케이던스",
+      "접지 위치",
+      "좌우 대칭",
+      "상하 움직임"
+    ],
+
+    training: [
+      "러닝 드릴",
+      "A-Skip",
+      "케이던스 러닝",
+      "싱글레그 안정화",
+      "코어 러닝 드릴"
+    ]
+  },
+
+
+  /* =======================================================
+     THROW
+  ======================================================= */
+
+  {
+    id: "softball-throw",
+
+    name: "소프트볼 던지기",
+
+    shortName: "소프트볼",
+
+    category: "throw",
+
+    categoryName: "투척",
+
+    ability: "투척 파워 · 협응력",
+
+    description:
+      "하체부터 몸통, 어깨, 팔까지 힘 전달 순서를 분석합니다.",
+
+    icon: "◉",
+
+    analysisType: "throw",
+
+    mainMetrics: [
+      "hipRotation",
+      "trunkRotation",
+      "shoulderAngle",
+      "elbowAngle",
+      "releaseAngle"
     ],
 
     keyJoints: [
       "shoulder",
       "elbow",
+      "wrist",
       "hip"
     ],
 
-    phases: [
-      "하단",
-      "상승",
-      "상단",
-      "하강"
-    ],
-
-    ideal: {
-      symmetryTolerance: 10
+    weights: {
+      speed: 10,
+      power: 30,
+      agility: 5,
+      stability: 10,
+      symmetry: 10,
+      technique: 35
     },
 
-    training: [
-      "밴드 풀업",
-      "랫풀다운",
-      "인버티드 로우",
-      "데드행",
-      "스캡 풀업"
-    ]
-  },
-
-
-  {
-    id: "squat",
-
-    name: "스쿼트",
-
-    category: "strength",
-
-    categoryName: "근력",
-
-    icon: "⌄",
-
-    ability: "하체 근력 · 움직임 평가",
-
-    description:
-      "고관절, 무릎, 발목의 움직임과 좌우 대칭을 분석합니다.",
-
-    mainMetrics: [
-      "스쿼트 깊이",
-      "무릎 각도",
-      "고관절 각도",
-      "발목 각도",
-      "몸통 기울기",
-      "좌우 대칭"
-    ],
-
-    keyJoints: [
-      "hip",
-      "knee",
-      "ankle",
-      "shoulder"
-    ],
-
     phases: [
-      "시작",
-      "하강",
-      "최저점",
-      "상승",
-      "완료"
+      "준비",
+      "백스윙",
+      "체중 이동",
+      "회전",
+      "릴리스",
+      "팔로스루"
     ],
 
-    ideal: {
-      kneeBottom: {
-        min: 65,
-        max: 110
-      },
-
-      symmetryTolerance: 10
-    },
+    feedbackFocus: [
+      "체중 이동",
+      "골반 회전",
+      "몸통 회전",
+      "팔꿈치",
+      "릴리스"
+    ],
 
     training: [
-      "고블릿 스쿼트",
-      "템포 스쿼트",
-      "스플릿 스쿼트",
-      "발목 가동성",
-      "코어 안정화"
+      "메디신볼 회전 던지기",
+      "밴드 로테이션",
+      "스텝 스로우",
+      "코어 회전",
+      "어깨 안정화"
     ]
   },
 
@@ -903,196 +896,345 @@ window.PE_EVENTS = [
 
     name: "좌전굴",
 
+    shortName: "좌전굴",
+
     category: "flexibility",
 
     categoryName: "유연성",
 
-    icon: "⌒",
-
-    ability: "햄스트링 · 허리 유연성",
+    ability: "후면사슬 유연성",
 
     description:
-      "몸통 전굴과 고관절 움직임을 분석합니다.",
+      "골반과 몸통의 움직임을 구분하여 분석합니다.",
+
+    icon: "⌄",
+
+    analysisType: "flexibility",
 
     mainMetrics: [
-      "몸통 각도",
-      "고관절 굴곡",
-      "무릎 유지",
-      "좌우 대칭"
+      "hipFlexion",
+      "trunkFlexion",
+      "kneeExtension",
+      "symmetry"
     ],
 
     keyJoints: [
       "shoulder",
       "hip",
-      "knee"
+      "knee",
+      "ankle"
     ],
+
+    weights: {
+      speed: 0,
+      power: 0,
+      agility: 5,
+      stability: 20,
+      symmetry: 20,
+      technique: 55
+    },
 
     phases: [
       "준비",
       "전굴",
       "최대 도달",
-      "복귀"
+      "유지"
     ],
 
-    ideal: {
-      symmetryTolerance: 10
-    },
+    feedbackFocus: [
+      "골반 굴곡",
+      "무릎 신전",
+      "몸통 움직임",
+      "좌우 대칭"
+    ],
 
     training: [
       "햄스트링 스트레칭",
-      "고관절 힌지",
-      "종아리 스트레칭",
-      "동적 유연성",
-      "고관절 가동성"
+      "힙 힌지",
+      "고관절 가동성",
+      "종아리 스트레칭"
     ]
   },
 
 
+  /* =======================================================
+     COORDINATION
+  ======================================================= */
+
   {
-    id: "trunk-flexion",
+    id: "basketball-dribble",
 
-    name: "체전굴",
+    name: "농구 드리블",
 
-    category: "flexibility",
+    shortName: "드리블",
 
-    categoryName: "유연성",
+    category: "coordination",
 
-    icon: "↓",
+    categoryName: "협응",
 
-    ability: "후면사슬 유연성",
+    ability: "협응력 · 민첩성",
 
     description:
-      "고관절과 몸통의 전굴 패턴을 분석합니다.",
+      "상하체 협응과 중심 이동을 분석합니다.",
+
+    icon: "◇",
+
+    analysisType: "coordination",
 
     mainMetrics: [
-      "고관절 굴곡",
-      "몸통 각도",
-      "무릎 각도",
-      "좌우 대칭"
+      "centerOfMass",
+      "rhythm",
+      "changeOfDirection",
+      "trunkControl",
+      "symmetry"
     ],
 
     keyJoints: [
       "shoulder",
+      "elbow",
+      "wrist",
       "hip",
       "knee"
     ],
 
-    phases: [
-      "준비",
-      "하강",
-      "최대 전굴",
-      "복귀"
-    ],
-
-    ideal: {
-      symmetryTolerance: 10
+    weights: {
+      speed: 15,
+      power: 5,
+      agility: 25,
+      stability: 15,
+      symmetry: 15,
+      technique: 25
     },
 
+    phases: [
+      "접근",
+      "드리블",
+      "방향전환",
+      "가속"
+    ],
+
+    feedbackFocus: [
+      "중심 높이",
+      "몸통 제어",
+      "방향전환",
+      "좌우 협응"
+    ],
+
     training: [
-      "햄스트링 스트레칭",
-      "제퍼슨 컬 가동성",
-      "고관절 힌지 드릴",
-      "종아리 스트레칭"
+      "콘 드리블",
+      "크로스오버",
+      "사이드 스텝",
+      "반응 드리블"
     ]
   }
+
 ];
 
 
 /* =========================================================
-   03. EVENT MAP
+   03. EVENT HELPERS
 ========================================================= */
 
-window.PE_EVENT_MAP = {};
-
-window.PE_EVENTS.forEach(function (event) {
-  window.PE_EVENT_MAP[event.id] = event;
-});
-
-
-/* =========================================================
-   04. EVENT HELPERS
-========================================================= */
-
-/**
- * ID로 종목 찾기
- */
-window.getPEEventById = function (eventId) {
+function getEventById(eventId) {
 
   if (!eventId) {
     return null;
   }
 
-  return window.PE_EVENT_MAP[eventId] || null;
-};
+  return (
+    PE_EVENTS.find(
+      event => event.id === eventId
+    ) || null
+  );
+}
 
 
-/**
- * 카테고리 이름 반환
- */
-window.getPECategoryName = function (categoryId) {
+function getEventByName(eventName) {
 
-  const category =
-    window.PE_EVENT_CATEGORIES.find(function (item) {
-      return item.id === categoryId;
-    });
-
-  return category
-    ? category.name
-    : "";
-};
-
-
-/**
- * 카테고리 필터
- */
-window.getPEEventsByCategory = function (categoryId) {
-
-  if (!categoryId || categoryId === "all") {
-    return [...window.PE_EVENTS];
+  if (!eventName) {
+    return null;
   }
 
-  return window.PE_EVENTS.filter(function (event) {
-    return event.category === categoryId;
-  });
-};
+  return (
+    PE_EVENTS.find(
+      event =>
+        event.name === eventName ||
+        event.shortName === eventName
+    ) || null
+  );
+}
 
 
-/**
- * 종목 검색
- */
-window.searchPEEvents = function (keyword) {
+function getEventsByCategory(categoryId) {
 
-  const search =
-    String(keyword || "")
+  if (!categoryId || categoryId === "all") {
+    return [...PE_EVENTS];
+  }
+
+  return PE_EVENTS.filter(
+    event => event.category === categoryId
+  );
+}
+
+
+function searchEvents(keyword = "") {
+
+  const query =
+    String(keyword)
       .trim()
       .toLowerCase();
 
-  if (!search) {
-    return [...window.PE_EVENTS];
+  if (!query) {
+    return [...PE_EVENTS];
   }
 
-  return window.PE_EVENTS.filter(function (event) {
+  return PE_EVENTS.filter(event => {
 
-    const searchableText = [
+    const searchText = [
       event.name,
+      event.shortName,
       event.categoryName,
       event.ability,
       event.description,
-      ...(event.mainMetrics || [])
+      ...(event.feedbackFocus || [])
     ]
       .join(" ")
       .toLowerCase();
 
-    return searchableText.includes(search);
+    return searchText.includes(query);
   });
-};
+}
 
 
 /* =========================================================
-   05. ANALYSIS METRIC LABELS
+   04. EVENT SCORE WEIGHT
 ========================================================= */
 
-window.PE_METRIC_LABELS = {
+function getEventWeights(eventId) {
+
+  const event = getEventById(eventId);
+
+  if (!event) {
+
+    return {
+      speed: 16.67,
+      power: 16.67,
+      agility: 16.67,
+      stability: 16.67,
+      symmetry: 16.66,
+      technique: 16.66
+    };
+  }
+
+  return {
+    ...event.weights
+  };
+}
+
+
+/* =========================================================
+   05. EVENT PHASE
+========================================================= */
+
+function getEventPhases(eventId) {
+
+  const event = getEventById(eventId);
+
+  if (!event) {
+    return ["준비", "동작", "완료"];
+  }
+
+  return [...event.phases];
+}
+
+
+/* =========================================================
+   06. TRAINING
+========================================================= */
+
+function getEventTraining(eventId) {
+
+  const event = getEventById(eventId);
+
+  if (!event) {
+    return [];
+  }
+
+  return [...event.training];
+}
+
+
+/* =========================================================
+   07. FEEDBACK FOCUS
+========================================================= */
+
+function getEventFeedbackFocus(eventId) {
+
+  const event = getEventById(eventId);
+
+  if (!event) {
+    return [];
+  }
+
+  return [...event.feedbackFocus];
+}
+
+
+/* =========================================================
+   08. EVENT METRICS
+========================================================= */
+
+function getEventMetrics(eventId) {
+
+  const event = getEventById(eventId);
+
+  if (!event) {
+    return [];
+  }
+
+  return [...event.mainMetrics];
+}
+
+
+/* =========================================================
+   09. KEY JOINTS
+========================================================= */
+
+function getEventKeyJoints(eventId) {
+
+  const event = getEventById(eventId);
+
+  if (!event) {
+    return [];
+  }
+
+  return [...event.keyJoints];
+}
+
+
+/* =========================================================
+   10. TARGET ANGLES
+========================================================= */
+
+function getEventTargetAngles(eventId) {
+
+  const event = getEventById(eventId);
+
+  if (!event || !event.targetAngles) {
+    return {};
+  }
+
+  return {
+    ...event.targetAngles
+  };
+}
+
+
+/* =========================================================
+   11. PERFORMANCE LABEL
+========================================================= */
+
+const PERFORMANCE_LABELS = {
 
   speed: "스피드",
 
@@ -1105,14 +1247,15 @@ window.PE_METRIC_LABELS = {
   symmetry: "대칭성",
 
   technique: "기술"
+
 };
 
 
 /* =========================================================
-   06. JOINT LABELS
+   12. JOINT LABEL
 ========================================================= */
 
-window.PE_JOINT_LABELS = {
+const JOINT_LABELS = {
 
   shoulder: "어깨",
 
@@ -1125,16 +1268,237 @@ window.PE_JOINT_LABELS = {
   knee: "무릎",
 
   ankle: "발목"
+
 };
 
 
 /* =========================================================
-   07. SCORE GRADE
+   13. ANALYSIS TYPE LABEL
 ========================================================= */
 
-window.getPerformanceGrade = function (score) {
+const ANALYSIS_TYPE_LABELS = {
 
-  const value = Number(score) || 0;
+  jump: "점프 분석",
+
+  sprint: "스프린트 분석",
+
+  agility: "민첩성 분석",
+
+  throw: "투척 분석",
+
+  repetition: "반복 동작 분석",
+
+  running: "러닝 분석",
+
+  flexibility: "유연성 분석",
+
+  coordination: "협응 분석"
+
+};
+
+
+/* =========================================================
+   14. EVENT CARD HTML
+========================================================= */
+
+function createEventCardHTML(event) {
+
+  if (!event) {
+    return "";
+  }
+
+  return `
+    <article
+      class="event-card"
+      data-event-id="${event.id}"
+    >
+
+      <span class="section-label">
+        ${event.categoryName}
+      </span>
+
+      <h3>
+        ${event.icon} ${event.name}
+      </h3>
+
+      <p>
+        ${event.description}
+      </p>
+
+      <div
+        style="
+          margin-top:10px;
+          color:#7f9bb1;
+          font-size:9px;
+        "
+      >
+        ${event.ability}
+      </div>
+
+      <button
+        type="button"
+        class="event-analysis-button"
+        data-event-id="${event.id}"
+      >
+        영상 분석
+      </button>
+
+    </article>
+  `;
+}
+
+
+/* =========================================================
+   15. EVENT SELECT OPTION
+========================================================= */
+
+function createEventOptionHTML(event) {
+
+  return `
+    <option value="${event.id}">
+      ${event.name}
+    </option>
+  `;
+}
+
+
+/* =========================================================
+   16. CATEGORY BUTTON HTML
+========================================================= */
+
+function createCategoryButtonHTML(
+  category,
+  activeCategory = "all"
+) {
+
+  const active =
+    category.id === activeCategory
+      ? "active"
+      : "";
+
+  return `
+    <button
+      type="button"
+      class="${active}"
+      data-event-category="${category.id}"
+    >
+      ${category.name}
+    </button>
+  `;
+}
+
+
+/* =========================================================
+   17. EVENT SUMMARY
+========================================================= */
+
+function createEventSummary(eventId) {
+
+  const event = getEventById(eventId);
+
+  if (!event) {
+    return null;
+  }
+
+  return {
+
+    id: event.id,
+
+    name: event.name,
+
+    shortName: event.shortName,
+
+    category: event.category,
+
+    categoryName: event.categoryName,
+
+    ability: event.ability,
+
+    analysisType: event.analysisType,
+
+    phases: [...event.phases],
+
+    metrics: [...event.mainMetrics],
+
+    keyJoints: [...event.keyJoints],
+
+    weights: {
+      ...event.weights
+    },
+
+    feedbackFocus: [
+      ...event.feedbackFocus
+    ],
+
+    training: [
+      ...event.training
+    ]
+
+  };
+}
+
+
+/* =========================================================
+   18. SCORE CALCULATION
+
+   app.js에서
+   calculateWeightedEventScore(eventId, metrics)
+   로 사용 가능
+========================================================= */
+
+function calculateWeightedEventScore(
+  eventId,
+  metrics = {}
+) {
+
+  const weights =
+    getEventWeights(eventId);
+
+  let total = 0;
+  let totalWeight = 0;
+
+  Object.keys(weights).forEach(key => {
+
+    const value =
+      Number(metrics[key]);
+
+    const weight =
+      Number(weights[key]);
+
+    if (
+      Number.isFinite(value) &&
+      Number.isFinite(weight)
+    ) {
+
+      total +=
+        Math.max(
+          0,
+          Math.min(100, value)
+        ) * weight;
+
+      totalWeight += weight;
+    }
+
+  });
+
+  if (totalWeight <= 0) {
+    return 0;
+  }
+
+  return Math.round(
+    total / totalWeight
+  );
+}
+
+
+/* =========================================================
+   19. SCORE GRADE
+========================================================= */
+
+function getPerformanceGrade(score) {
+
+  const value =
+    Number(score) || 0;
 
   if (value >= 95) {
     return "S+";
@@ -1165,235 +1529,582 @@ window.getPerformanceGrade = function (score) {
   }
 
   return "D";
-};
+}
 
 
 /* =========================================================
-   08. SCORE DESCRIPTION
+   20. EVENT FEEDBACK GENERATOR
 ========================================================= */
 
-window.getPerformanceDescription = function (score) {
-
-  const value = Number(score) || 0;
-
-  if (value >= 90) {
-    return "매우 우수한 움직임 패턴입니다.";
-  }
-
-  if (value >= 80) {
-    return "전반적으로 우수하며 일부 세부 동작을 개선할 수 있습니다.";
-  }
-
-  if (value >= 70) {
-    return "기본적인 수행은 안정적이며 기술적인 개선 여지가 있습니다.";
-  }
-
-  if (value >= 60) {
-    return "일부 움직임에서 자세와 안정성 개선이 필요합니다.";
-  }
-
-  return "기초 움직임 패턴부터 단계적으로 교정하는 것이 좋습니다.";
-};
-
-
-/* =========================================================
-   09. EVENT FEEDBACK GENERATOR
-========================================================= */
-
-window.createEventFeedback = function (
-  event,
-  metrics,
-  angles
+function generateEventFeedback(
+  eventId,
+  metrics = {}
 ) {
 
-  const feedback = [];
-
-  if (!event) {
-    return feedback;
-  }
-
-
-  const symmetry =
-    Number(metrics?.symmetry || 0);
-
-  const stability =
-    Number(metrics?.stability || 0);
-
-  const technique =
-    Number(metrics?.technique || 0);
-
-  const power =
-    Number(metrics?.power || 0);
-
-
-  if (symmetry >= 85) {
-
-    feedback.push({
-      type: "good",
-      title: "좌우 대칭성이 좋습니다.",
-      text:
-        "좌우 관절 움직임의 차이가 비교적 작게 나타났습니다."
-    });
-
-  } else {
-
-    feedback.push({
-      type: "warning",
-      title: "좌우 움직임 차이를 확인하세요.",
-      text:
-        "왼쪽과 오른쪽의 관절각 또는 움직임 타이밍 차이가 나타났습니다."
-    });
-
-  }
-
-
-  if (stability >= 85) {
-
-    feedback.push({
-      type: "good",
-      title: "자세 안정성이 좋습니다.",
-      text:
-        "동작 중 신체 중심의 흔들림이 비교적 안정적입니다."
-    });
-
-  } else {
-
-    feedback.push({
-      type: "warning",
-      title: "신체 중심 안정성을 개선하세요.",
-      text:
-        "동작 중 몸통 또는 신체 중심 이동이 크게 나타날 수 있습니다."
-    });
-
-  }
-
-
-  if (technique >= 85) {
-
-    feedback.push({
-      type: "good",
-      title: "기술 수행이 안정적입니다.",
-      text:
-        event.name +
-        "의 주요 동작 패턴이 비교적 안정적으로 나타났습니다."
-    });
-
-  } else {
-
-    feedback.push({
-      type: "info",
-      title: "종목별 핵심 자세를 점검하세요.",
-      text:
-        event.name +
-        "에서 중요한 관절 위치와 타이밍을 핵심 프레임에서 확인하세요."
-    });
-
-  }
-
-
-  if (
-    event.category === "jump" &&
-    power < 80
-  ) {
-
-    feedback.push({
-      type: "info",
-      title: "도약 파워 개선",
-      text:
-        "하체의 빠른 신전과 팔 스윙 타이밍을 함께 개선하면 도약 효율을 높이는 데 도움이 됩니다."
-    });
-  }
-
-
-  if (
-    event.category === "run" ||
-    event.category === "agility"
-  ) {
-
-    feedback.push({
-      type: "info",
-      title: "접지와 재가속 확인",
-      text:
-        "발이 몸에서 지나치게 멀리 떨어져 접지되는지와 방향전환 후 첫 스텝을 확인하세요."
-    });
-  }
-
-
-  if (
-    event.category === "strength"
-  ) {
-
-    feedback.push({
-      type: "info",
-      title: "반복 자세 유지",
-      text:
-        "횟수가 증가해도 초기 반복과 비슷한 관절각과 몸통 정렬을 유지하는 것이 중요합니다."
-    });
-  }
-
-
-  return feedback;
-};
-
-
-/* =========================================================
-   10. TRAINING GENERATOR
-========================================================= */
-
-window.getEventTrainingRecommendations =
-function (event) {
+  const event =
+    getEventById(eventId);
 
   if (!event) {
     return [];
   }
 
-  return (event.training || []).map(
-    function (trainingName, index) {
+  const feedback = [];
 
-      return {
-        title:
-          (index + 1) +
-          ". " +
-          trainingName,
+  const speed =
+    Number(metrics.speed) || 0;
 
-        description:
-          event.name +
-          " 수행 능력 향상을 위한 추천 훈련입니다."
-      };
-    }
-  );
-};
+  const power =
+    Number(metrics.power) || 0;
+
+  const agility =
+    Number(metrics.agility) || 0;
+
+  const stability =
+    Number(metrics.stability) || 0;
+
+  const symmetry =
+    Number(metrics.symmetry) || 0;
+
+  const technique =
+    Number(metrics.technique) || 0;
+
+
+  if (power < 70) {
+
+    feedback.push({
+      type: "power",
+      title: "파워 개선",
+      text:
+        "하체와 고관절의 힘을 동작 전체로 전달하는 능력을 개선할 필요가 있습니다."
+    });
+
+  }
+
+
+  if (speed < 70) {
+
+    feedback.push({
+      type: "speed",
+      title: "동작 속도 개선",
+      text:
+        "동작 전환 속도와 가속 구간의 움직임을 확인해 보세요."
+    });
+
+  }
+
+
+  if (agility < 70) {
+
+    feedback.push({
+      type: "agility",
+      title: "민첩성 개선",
+      text:
+        "방향전환 시 신체중심을 안정적으로 유지하는 것이 중요합니다."
+    });
+
+  }
+
+
+  if (stability < 70) {
+
+    feedback.push({
+      type: "stability",
+      title: "안정성 개선",
+      text:
+        "몸통과 골반의 흔들림을 줄이고 동작 중심을 안정적으로 유지해 보세요."
+    });
+
+  }
+
+
+  if (symmetry < 75) {
+
+    feedback.push({
+      type: "symmetry",
+      title: "좌우 대칭 확인",
+      text:
+        "좌우 관절 움직임 차이가 확인될 수 있으므로 양쪽 움직임을 비교해 보세요."
+    });
+
+  }
+
+
+  if (technique < 75) {
+
+    feedback.push({
+      type: "technique",
+      title: "기술 자세 개선",
+      text:
+        `${event.name}의 핵심 동작 단계와 관절 타이밍을 다시 확인하는 것이 좋습니다.`
+    });
+
+  }
+
+
+  if (feedback.length === 0) {
+
+    feedback.push({
+      type: "good",
+      title: "좋은 움직임",
+      text:
+        "현재 영상에서 전체적인 자세 안정성과 동작 연결이 양호합니다."
+    });
+
+  }
+
+  return feedback;
+}
 
 
 /* =========================================================
-   11. EVENT SELECT OPTIONS
+   21. TRAINING RECOMMENDATION
 ========================================================= */
 
-window.createPEEventOptions =
-function () {
+function generateTrainingRecommendation(
+  eventId,
+  metrics = {}
+) {
 
-  return window.PE_EVENTS
-    .map(function (event) {
+  const event =
+    getEventById(eventId);
 
-      return (
-        '<option value="' +
-        event.id +
-        '">' +
-        event.name +
-        "</option>"
+  if (!event) {
+    return [];
+  }
+
+  const recommendations = [];
+
+  const values = {
+
+    speed:
+      Number(metrics.speed) || 0,
+
+    power:
+      Number(metrics.power) || 0,
+
+    agility:
+      Number(metrics.agility) || 0,
+
+    stability:
+      Number(metrics.stability) || 0,
+
+    symmetry:
+      Number(metrics.symmetry) || 0,
+
+    technique:
+      Number(metrics.technique) || 0
+
+  };
+
+
+  const sorted =
+    Object.entries(values)
+      .sort(
+        (a, b) => a[1] - b[1]
       );
 
-    })
-    .join("");
+
+  const weakPoints =
+    sorted
+      .slice(0, 3)
+      .map(item => item[0]);
+
+
+  weakPoints.forEach(
+    (weakPoint, index) => {
+
+      let reason = "";
+
+      switch (weakPoint) {
+
+        case "speed":
+
+          reason =
+            "동작 속도와 가속 능력 향상";
+
+          break;
+
+
+        case "power":
+
+          reason =
+            "순발력과 힘 전달 능력 향상";
+
+          break;
+
+
+        case "agility":
+
+          reason =
+            "방향전환과 반응 능력 향상";
+
+          break;
+
+
+        case "stability":
+
+          reason =
+            "몸통과 관절 안정성 향상";
+
+          break;
+
+
+        case "symmetry":
+
+          reason =
+            "좌우 움직임 균형 향상";
+
+          break;
+
+
+        case "technique":
+
+          reason =
+            "종목 기술 동작 개선";
+
+          break;
+
+      }
+
+
+      const exercise =
+        event.training[
+          index % event.training.length
+        ];
+
+
+      recommendations.push({
+
+        title: exercise,
+
+        reason,
+
+        priority:
+          index === 0
+            ? "HIGH"
+            : index === 1
+              ? "MEDIUM"
+              : "NORMAL"
+
+      });
+
+    }
+  );
+
+
+  return recommendations;
+}
+
+
+/* =========================================================
+   22. JUMP ANALYSIS CONFIG
+========================================================= */
+
+const JUMP_ANALYSIS_CONFIG = {
+
+  minimumFlightTime: 0.08,
+
+  landingWindow: 0.35,
+
+  centerTrackingLength: 160,
+
+  takeoffAngleMin: 20,
+
+  takeoffAngleMax: 55,
+
+  idealTakeoffAngle: 35
+
 };
 
 
 /* =========================================================
-   12. DEVELOPMENT CHECK
+   23. SPRINT ANALYSIS CONFIG
 ========================================================= */
 
-console.log(
-  "[PE PERFORMANCE LAB] events.js loaded:",
-  window.PE_EVENTS.length,
-  "events"
-);
+const SPRINT_ANALYSIS_CONFIG = {
+
+  minimumStepInterval: 0.12,
+
+  maximumStepInterval: 1.2,
+
+  trajectoryLength: 180,
+
+  accelerationTrunkMin: 30,
+
+  accelerationTrunkMax: 65
+
+};
+
+
+/* =========================================================
+   24. SYMMETRY CONFIG
+========================================================= */
+
+const SYMMETRY_CONFIG = {
+
+  excellentDifference: 5,
+
+  goodDifference: 10,
+
+  warningDifference: 15,
+
+  poorDifference: 20
+
+};
+
+
+/* =========================================================
+   25. ANGLE QUALITY
+========================================================= */
+
+function getAngleQuality(
+  value,
+  range
+) {
+
+  if (
+    !Number.isFinite(Number(value)) ||
+    !Array.isArray(range) ||
+    range.length < 2
+  ) {
+    return {
+      score: 0,
+      status: "unknown"
+    };
+  }
+
+  const angle =
+    Number(value);
+
+  const min =
+    Number(range[0]);
+
+  const max =
+    Number(range[1]);
+
+  if (
+    angle >= min &&
+    angle <= max
+  ) {
+
+    return {
+      score: 100,
+      status: "excellent"
+    };
+  }
+
+
+  const difference =
+    angle < min
+      ? min - angle
+      : angle - max;
+
+
+  if (difference <= 5) {
+
+    return {
+      score: 90,
+      status: "good"
+    };
+  }
+
+
+  if (difference <= 10) {
+
+    return {
+      score: 75,
+      status: "warning"
+    };
+  }
+
+
+  if (difference <= 20) {
+
+    return {
+      score: 60,
+      status: "poor"
+    };
+  }
+
+
+  return {
+    score: 40,
+    status: "very-poor"
+  };
+}
+
+
+/* =========================================================
+   26. EVENT VALIDATION
+========================================================= */
+
+function validateEventData() {
+
+  const ids = new Set();
+
+  const errors = [];
+
+  PE_EVENTS.forEach(event => {
+
+    if (!event.id) {
+      errors.push(
+        "종목 ID가 없습니다."
+      );
+    }
+
+    if (ids.has(event.id)) {
+      errors.push(
+        `중복 종목 ID: ${event.id}`
+      );
+    }
+
+    ids.add(event.id);
+
+
+    if (!event.name) {
+      errors.push(
+        `${event.id}: 종목명이 없습니다.`
+      );
+    }
+
+
+    if (!event.category) {
+      errors.push(
+        `${event.id}: 카테고리가 없습니다.`
+      );
+    }
+
+
+    if (!event.analysisType) {
+      errors.push(
+        `${event.id}: 분석 타입이 없습니다.`
+      );
+    }
+
+  });
+
+
+  return {
+    valid: errors.length === 0,
+    errors
+  };
+}
+
+
+/* =========================================================
+   27. WINDOW EXPORT
+
+   app.js에서 window.PE_EVENTS 등으로 접근 가능
+========================================================= */
+
+window.EVENT_CATEGORIES =
+  EVENT_CATEGORIES;
+
+window.PE_EVENTS =
+  PE_EVENTS;
+
+window.PERFORMANCE_LABELS =
+  PERFORMANCE_LABELS;
+
+window.JOINT_LABELS =
+  JOINT_LABELS;
+
+window.ANALYSIS_TYPE_LABELS =
+  ANALYSIS_TYPE_LABELS;
+
+window.JUMP_ANALYSIS_CONFIG =
+  JUMP_ANALYSIS_CONFIG;
+
+window.SPRINT_ANALYSIS_CONFIG =
+  SPRINT_ANALYSIS_CONFIG;
+
+window.SYMMETRY_CONFIG =
+  SYMMETRY_CONFIG;
+
+
+window.getEventById =
+  getEventById;
+
+window.getEventByName =
+  getEventByName;
+
+window.getEventsByCategory =
+  getEventsByCategory;
+
+window.searchEvents =
+  searchEvents;
+
+window.getEventWeights =
+  getEventWeights;
+
+window.getEventPhases =
+  getEventPhases;
+
+window.getEventTraining =
+  getEventTraining;
+
+window.getEventFeedbackFocus =
+  getEventFeedbackFocus;
+
+window.getEventMetrics =
+  getEventMetrics;
+
+window.getEventKeyJoints =
+  getEventKeyJoints;
+
+window.getEventTargetAngles =
+  getEventTargetAngles;
+
+window.createEventCardHTML =
+  createEventCardHTML;
+
+window.createEventOptionHTML =
+  createEventOptionHTML;
+
+window.createCategoryButtonHTML =
+  createCategoryButtonHTML;
+
+window.createEventSummary =
+  createEventSummary;
+
+window.calculateWeightedEventScore =
+  calculateWeightedEventScore;
+
+window.getPerformanceGrade =
+  getPerformanceGrade;
+
+window.generateEventFeedback =
+  generateEventFeedback;
+
+window.generateTrainingRecommendation =
+  generateTrainingRecommendation;
+
+window.getAngleQuality =
+  getAngleQuality;
+
+window.validateEventData =
+  validateEventData;
+
+
+/* =========================================================
+   28. STARTUP CHECK
+========================================================= */
+
+const EVENT_VALIDATION =
+  validateEventData();
+
+
+if (!EVENT_VALIDATION.valid) {
+
+  console.error(
+    "[EVENTS] 데이터 오류",
+    EVENT_VALIDATION.errors
+  );
+
+} else {
+
+  console.log(
+    `[EVENTS] ${PE_EVENTS.length}개 체대입시 종목 로드 완료`
+  );
+
+}
