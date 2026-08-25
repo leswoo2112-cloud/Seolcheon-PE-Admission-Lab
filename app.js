@@ -1,238 +1,258 @@
 /* =========================================================
    설천고 스포츠과학 분석센터 PRO
-   ① app.js
-   ========================================================= */
+   ④ app.js
+   전체 시스템 / 영상분석 / 관절각 / 기준선 /
+   핵심 프레임 / 차트 / 리포트
+========================================================= */
 
 "use strict";
 
+
 /* =========================================================
-   GLOBAL
+   GLOBAL STATE
 ========================================================= */
 
 const APP = {
+
   page: "dashboard",
+
   video: null,
+
+  videoURL: null,
+
   pose: null,
+
   poseReady: false,
+
   analyzing: false,
 
-  animationId: null,
+  animationFrame: null,
+
+  currentResults: null,
+
+  lastPose: null,
+
+  frameNumber: 0,
+
+  totalFrames: 0,
+
+  trajectory: [],
+
+  keyFrames: [],
+
+  angleHistory: [],
+
+  analysisStartedAt: 0,
 
   charts: {},
 
-  frameData: [],
-  keyFrames: [],
+  videoFPS: 30,
 
-  currentFrame: 0,
+  lastVideoTime: 0,
 
   options: {
+
     skeleton: true,
+
     angles: true,
+
     trajectory: true,
+
     baseline: true,
+
     center: true,
+
     keyFrames: true
-  },
 
-  angles: {
-    leftHip: 0,
-    rightHip: 0,
-    leftKnee: 0,
-    rightKnee: 0,
-    leftAnkle: 0,
-    rightAnkle: 0,
-    leftElbow: 0,
-    rightElbow: 0,
-    trunk: 0
-  },
-
-  scores: {
-    total: 0,
-    stability: 0,
-    alignment: 0,
-    symmetry: 0,
-    efficiency: 0
   }
+
 };
 
 
 /* =========================================================
-   DOM SHORTCUT
+   DOM
 ========================================================= */
 
-function $(id) {
-  return document.getElementById(id);
+const $ = id =>
+  document.getElementById(id);
+
+const qs = selector =>
+  document.querySelector(selector);
+
+const qsa = selector =>
+  document.querySelectorAll(selector);
+
+
+/* =========================================================
+   UTILITY
+========================================================= */
+
+function clamp(
+  value,
+  min,
+  max
+) {
+
+  return Math.max(
+    min,
+    Math.min(max, value)
+  );
+
+}
+
+
+function round(
+  value,
+  digits = 1
+) {
+
+  const power =
+    10 ** digits;
+
+  return Math.round(
+    value * power
+  ) / power;
+
+}
+
+
+function distance(
+  a,
+  b
+) {
+
+  if (!a || !b) {
+    return 0;
+  }
+
+  return Math.hypot(
+    a.x - b.x,
+    a.y - b.y
+  );
+
+}
+
+
+function angle(
+  a,
+  b,
+  c
+) {
+
+  if (!a || !b || !c) {
+    return 0;
+  }
+
+
+  const BA = {
+
+    x: a.x - b.x,
+
+    y: a.y - b.y
+
+  };
+
+
+  const BC = {
+
+    x: c.x - b.x,
+
+    y: c.y - b.y
+
+  };
+
+
+  const dot =
+    BA.x * BC.x +
+    BA.y * BC.y;
+
+
+  const magBA =
+    Math.hypot(
+      BA.x,
+      BA.y
+    );
+
+
+  const magBC =
+    Math.hypot(
+      BC.x,
+      BC.y
+    );
+
+
+  if (
+    magBA === 0 ||
+    magBC === 0
+  ) {
+
+    return 0;
+
+  }
+
+
+  const cos =
+    clamp(
+      dot /
+      (
+        magBA *
+        magBC
+      ),
+      -1,
+      1
+    );
+
+
+  return (
+    Math.acos(cos) *
+    180 /
+    Math.PI
+  );
+
 }
 
 
 /* =========================================================
-   STORAGE
+   TOAST
 ========================================================= */
 
-function getRecords() {
-  try {
-    return JSON.parse(
-      localStorage.getItem(
-        "seolcheon_event_records"
-      ) || "[]"
-    );
-  } catch {
-    return [];
-  }
-}
+function toast(
+  message
+) {
 
+  const element =
+    $("toast");
 
-function getAthletes() {
-  try {
-    return JSON.parse(
-      localStorage.getItem(
-        "seolcheon_athletes"
-      ) || "[]"
-    );
-  } catch {
-    return [];
-  }
-}
-
-
-function getGoal() {
-  try {
-    return JSON.parse(
-      localStorage.getItem(
-        "seolcheon_college_goal"
-      ) || "{}"
-    );
-  } catch {
-    return {};
-  }
-}
-
-
-/* =========================================================
-   PAGE NAVIGATION
-========================================================= */
-
-function openPage(pageName) {
-
-  const pages =
-    document.querySelectorAll(".page");
-
-  pages.forEach(page => {
-    page.classList.remove("active");
-  });
-
-
-  const target =
-    $(`page-${pageName}`);
-
-  if (!target) {
-    console.warn(
-      "Page not found:",
-      pageName
-    );
+  if (!element) {
     return;
   }
 
 
-  target.classList.add("active");
+  element.textContent =
+    message;
 
 
-  document
-    .querySelectorAll(".nav-button")
-    .forEach(button => {
-
-      button.classList.toggle(
-        "active",
-        button.dataset.page === pageName
-      );
-
-    });
+  element.classList.add(
+    "show"
+  );
 
 
-  APP.page = pageName;
+  clearTimeout(
+    toast.timer
+  );
 
 
-  const titles = {
-    dashboard: "대시보드",
-    athletes: "선수 관리",
-    events: "체대입시",
-    analysis: "영상 자세분석",
-    comparison: "비교 분석",
-    records: "분석 기록",
-    report: "체대입시 리포트"
-  };
+  toast.timer =
+    setTimeout(
+      () => {
 
+        element.classList.remove(
+          "show"
+        );
 
-  if ($("pageTitle")) {
-    $("pageTitle").textContent =
-      titles[pageName] || "분석센터";
-  }
-
-
-  if (pageName === "dashboard") {
-    updateDashboard();
-  }
-
-
-  if (pageName === "report") {
-    updateReport();
-  }
-
-
-  if (pageName === "comparison") {
-    updateComparison();
-  }
-
-}
-
-
-window.openPage = openPage;
-
-
-/* =========================================================
-   NAV EVENTS
-========================================================= */
-
-function setupNavigation() {
-
-  document
-    .querySelectorAll(
-      ".nav-button"
-    )
-    .forEach(button => {
-
-      button.addEventListener(
-        "click",
-        () => {
-
-          openPage(
-            button.dataset.page
-          );
-
-        }
-      );
-
-    });
-
-
-  document
-    .querySelectorAll(
-      "[data-open-page]"
-    )
-    .forEach(button => {
-
-      button.addEventListener(
-        "click",
-        () => {
-
-          openPage(
-            button.dataset.openPage
-          );
-
-        }
-      );
-
-    });
+      },
+      2300
+    );
 
 }
 
@@ -241,163 +261,195 @@ function setupNavigation() {
    CLOCK
 ========================================================= */
 
-function startClock() {
+function updateClock() {
 
-  function update() {
+  const element =
+    $("clock");
 
-    const now =
-      new Date();
+  if (!element) {
+    return;
+  }
 
-    if ($("clock")) {
 
-      $("clock").textContent =
-        now.toLocaleTimeString(
-          "ko-KR",
-          {
-            hour12: false
+  const now =
+    new Date();
+
+
+  element.textContent =
+    now.toLocaleTimeString(
+      "ko-KR",
+      {
+        hour12: false
+      }
+    );
+
+}
+
+
+setInterval(
+  updateClock,
+  1000
+);
+
+
+/* =========================================================
+   PAGE NAVIGATION
+========================================================= */
+
+const PAGE_NAMES = {
+
+  dashboard:
+    "대시보드",
+
+  athletes:
+    "선수 관리",
+
+  events:
+    "체대입시",
+
+  analysis:
+    "자세분석",
+
+  comparison:
+    "비교분석",
+
+  records:
+    "분석기록",
+
+  report:
+    "리포트"
+
+};
+
+
+function openPage(
+  pageName
+) {
+
+  if (
+    !PAGE_NAMES[pageName]
+  ) {
+
+    return;
+
+  }
+
+
+  APP.page =
+    pageName;
+
+
+  qsa(".page")
+    .forEach(
+      page => {
+
+        page.classList.toggle(
+          "active",
+          page.id ===
+          `page-${pageName}`
+        );
+
+      }
+    );
+
+
+  qsa(".nav-button")
+    .forEach(
+      button => {
+
+        button.classList.toggle(
+          "active",
+          button.dataset.page ===
+          pageName
+        );
+
+      }
+    );
+
+
+  const title =
+    $("pageTitle");
+
+
+  if (title) {
+
+    title.textContent =
+      PAGE_NAMES[pageName];
+
+  }
+
+
+  if (
+    pageName ===
+    "dashboard"
+  ) {
+
+    updateDashboardCharts();
+
+  }
+
+
+  if (
+    pageName ===
+    "comparison"
+  ) {
+
+    renderComparison();
+
+  }
+
+
+  if (
+    pageName ===
+    "report"
+  ) {
+
+    updateReport();
+
+  }
+
+}
+
+
+/* =========================================================
+   NAV EVENTS
+========================================================= */
+
+function initNavigation() {
+
+  qsa(".nav-button")
+    .forEach(
+      button => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            openPage(
+              button.dataset.page
+            );
+
           }
         );
 
-    }
-
-  }
-
-  update();
-
-  setInterval(
-    update,
-    1000
-  );
-
-}
+      }
+    );
 
 
-/* =========================================================
-   CHART DEFAULT
-========================================================= */
+  qsa("[data-open-page]")
+    .forEach(
+      button => {
 
-function chartDefaults() {
+        button.addEventListener(
+          "click",
+          () => {
 
-  if (
-    typeof Chart ===
-    "undefined"
-  ) {
-    return;
-  }
-
-
-  Chart.defaults.color =
-    "#8da0b5";
-
-  Chart.defaults.borderColor =
-    "rgba(255,255,255,.07)";
-
-  Chart.defaults.font.family =
-    "Pretendard, Noto Sans KR, sans-serif";
-
-}
-
-
-/* =========================================================
-   PERFORMANCE CHART
-========================================================= */
-
-function createPerformanceChart() {
-
-  const canvas =
-    $("performanceChart");
-
-  if (!canvas ||
-      typeof Chart === "undefined") {
-    return;
-  }
-
-
-  const records =
-    getRecords()
-      .slice()
-      .reverse();
-
-
-  const labels =
-    records.length
-      ? records.map(
-          (_, index) =>
-            `${index + 1}`
-        )
-      : [
-          "1",
-          "2",
-          "3",
-          "4",
-          "5"
-        ];
-
-
-  const data =
-    records.length
-      ? records.map(
-          record =>
-            Number(record.score || 0)
-        )
-      : [0, 0, 0, 0, 0];
-
-
-  destroyChart(
-    "performance"
-  );
-
-
-  APP.charts.performance =
-    new Chart(
-      canvas,
-      {
-        type: "line",
-
-        data: {
-
-          labels,
-
-          datasets: [
-            {
-              label: "실기점수",
-
-              data,
-
-              borderWidth: 2,
-
-              tension: .35,
-
-              fill: false,
-
-              pointRadius: 3
-            }
-          ]
-
-        },
-
-        options: {
-
-          responsive: true,
-
-          maintainAspectRatio: false,
-
-          plugins: {
-            legend: {
-              display: false
-            }
-          },
-
-          scales: {
-
-            y: {
-              min: 0,
-              max: 100
-            }
+            openPage(
+              button.dataset.openPage
+            );
 
           }
-
-        }
+        );
 
       }
     );
@@ -406,365 +458,104 @@ function createPerformanceChart() {
 
 
 /* =========================================================
-   RADAR
+   VIDEO ELEMENT
 ========================================================= */
 
-function createRadarChart(
-  canvasId,
-  chartKey
-) {
-
-  const canvas =
-    $(canvasId);
-
-  if (!canvas ||
-      typeof Chart === "undefined") {
-    return;
-  }
-
-
-  destroyChart(
-    chartKey
-  );
-
-
-  APP.charts[chartKey] =
-    new Chart(
-      canvas,
-      {
-        type: "radar",
-
-        data: {
-
-          labels: [
-            "순발력",
-            "스피드",
-            "근력",
-            "지구력",
-            "유연성",
-            "코어"
-          ],
-
-          datasets: [
-            {
-              label: "현재",
-              data: [
-                0,
-                0,
-                0,
-                0,
-                0,
-                0
-              ],
-
-              borderWidth: 2,
-
-              pointRadius: 3,
-
-              fill: true
-            }
-          ]
-
-        },
-
-        options: {
-
-          responsive: true,
-
-          maintainAspectRatio: false,
-
-          scales: {
-            r: {
-              min: 0,
-              max: 100,
-
-              ticks: {
-                display: false
-              },
-
-              grid: {
-                color:
-                  "rgba(255,255,255,.08)"
-              },
-
-              angleLines: {
-                color:
-                  "rgba(255,255,255,.08)"
-              }
-            }
-          },
-
-          plugins: {
-            legend: {
-              display: false
-            }
-          }
-
-        }
-
-      }
-    );
-
-}
-
-
-/* =========================================================
-   UPDATE RADAR
-========================================================= */
-
-function updateRadar(
-  chartKey
-) {
-
-  const chart =
-    APP.charts[chartKey];
-
-  if (!chart) return;
-
-
-  const records =
-    getRecords();
-
-
-  if (!records.length) {
-
-    chart.data.datasets[0].data =
-      [0, 0, 0, 0, 0, 0];
-
-    chart.update();
-
-    return;
-
-  }
-
-
-  const scores =
-    records.map(
-      record =>
-        Number(record.score || 0)
-    );
-
-
-  const average =
-    scores.reduce(
-      (a, b) => a + b,
-      0
-    ) / scores.length;
-
-
-  chart.data.datasets[0].data = [
-
-    Math.min(
-      100,
-      average + 4
-    ),
-
-    Math.min(
-      100,
-      average
-    ),
-
-    Math.min(
-      100,
-      average - 2
-    ),
-
-    Math.min(
-      100,
-      average + 1
-    ),
-
-    Math.min(
-      100,
-      average - 5
-    ),
-
-    Math.min(
-      100,
-      average + 2
-    )
-
-  ].map(
-    value =>
-      Math.max(
-        0,
-        Math.round(value)
-      )
-  );
-
-
-  chart.update();
-
-}
-
-
-/* =========================================================
-   DESTROY CHART
-========================================================= */
-
-function destroyChart(
-  key
-) {
-
-  if (
-    APP.charts[key]
-  ) {
-
-    APP.charts[key].destroy();
-
-    APP.charts[key] =
-      null;
-
-  }
-
-}
-
-
-/* =========================================================
-   DASHBOARD
-========================================================= */
-
-function updateDashboard() {
-
-  const athletes =
-    getAthletes();
-
-  const records =
-    getRecords();
-
-  const goal =
-    getGoal();
-
-
-  if ($("athleteCount")) {
-    $("athleteCount").textContent =
-      athletes.length;
-  }
-
-
-  if ($("recordCount")) {
-    $("recordCount").textContent =
-      records.length;
-  }
-
-
-  const average =
-    records.length
-      ? Math.round(
-          records.reduce(
-            (sum, record) =>
-              sum +
-              Number(
-                record.score || 0
-              ),
-            0
-          ) /
-          records.length
-        )
-      : 0;
-
-
-  if ($("averageScore")) {
-    $("averageScore").textContent =
-      average;
-  }
-
-
-  if ($("targetUniversity")) {
-    $("targetUniversity").textContent =
-      goal.university ||
-      "-";
-  }
-
-
-  createPerformanceChart();
-
-  createRadarChart(
-    "dashboardRadar",
-    "dashboardRadar"
-  );
-
-  updateRadar(
-    "dashboardRadar"
-  );
-
-}
-
-
-/* =========================================================
-   VIDEO
-========================================================= */
-
-function setupVideo() {
+function initVideo() {
 
   APP.video =
     $("analysisVideo");
 
-  if (!APP.video) return;
+
+  if (!APP.video) {
+    return;
+  }
 
 
-  const input =
-    $("videoInput");
-
-  const uploadButton =
-    $("uploadVideoButton");
-
-
-  uploadButton?.addEventListener(
-    "click",
+  APP.video.addEventListener(
+    "loadedmetadata",
     () => {
 
-      input?.click();
+      const placeholder =
+        $("videoPlaceholder");
 
-    }
-  );
+      if (placeholder) {
 
+        placeholder.style.display =
+          "none";
 
-  input?.addEventListener(
-    "change",
-    event => {
-
-      const file =
-        event.target.files?.[0];
-
-      if (!file) return;
+      }
 
 
-      const url =
-        URL.createObjectURL(
-          file
+      APP.videoFPS =
+        30;
+
+
+      APP.totalFrames =
+        Math.floor(
+          APP.video.duration *
+          APP.videoFPS
         );
 
 
-      APP.video.src =
-        url;
+      drawVideoCanvas();
 
-      APP.video.load();
-
-
-      APP.video.onloadedmetadata =
-        () => {
-
-          const placeholder =
-            $("videoPlaceholder");
-
-          if (placeholder) {
-            placeholder.style.display =
-              "none";
-          }
-
-
-          resizePoseCanvas();
-
-
-          showToast(
-            "영상이 준비되었습니다."
-          );
-
-        };
+      toast(
+        "영상이 준비되었습니다."
+      );
 
     }
   );
+
+
+  APP.video.addEventListener(
+    "timeupdate",
+    () => {
+
+      if (
+        !APP.analyzing
+      ) {
+
+        drawVideoCanvas();
+
+      }
+
+    }
+  );
+
+
+  APP.video.addEventListener(
+    "ended",
+    () => {
+
+      if (
+        APP.analyzing
+      ) {
+
+        stopAnalysis();
+
+      }
+
+    }
+  );
+
+
+  $("uploadVideoButton")
+    ?.addEventListener(
+      "click",
+      () => {
+
+        $("videoInput")?.click();
+
+      }
+    );
+
+
+  $("videoInput")
+    ?.addEventListener(
+      "change",
+      handleVideoUpload
+    );
 
 
   $("videoPlayPause")
@@ -779,11 +570,8 @@ function setupVideo() {
       "click",
       () => {
 
-        APP.video.playbackRate =
-          .5;
-
-        setSpeedActive(
-          "videoSlow"
+        setVideoSpeed(
+          .5
         );
 
       }
@@ -795,11 +583,8 @@ function setupVideo() {
       "click",
       () => {
 
-        APP.video.playbackRate =
-          1;
-
-        setSpeedActive(
-          "videoNormal"
+        setVideoSpeed(
+          1
         );
 
       }
@@ -834,95 +619,201 @@ function setupVideo() {
     );
 
 
-  APP.video.addEventListener(
-    "loadedmetadata",
-    resizePoseCanvas
-  );
-
-
-  window.addEventListener(
-    "resize",
-    resizePoseCanvas
-  );
+  initAnalysisToggles();
 
 }
 
 
 /* =========================================================
-   VIDEO CONTROLS
+   VIDEO UPLOAD
+========================================================= */
+
+function handleVideoUpload(
+  event
+) {
+
+  const file =
+    event.target.files?.[0];
+
+
+  if (!file) {
+    return;
+  }
+
+
+  if (
+    !file.type.startsWith(
+      "video/"
+    )
+  ) {
+
+    toast(
+      "영상 파일만 선택할 수 있습니다."
+    );
+
+    return;
+
+  }
+
+
+  if (
+    APP.videoURL
+  ) {
+
+    URL.revokeObjectURL(
+      APP.videoURL
+    );
+
+  }
+
+
+  APP.videoURL =
+    URL.createObjectURL(
+      file
+    );
+
+
+  APP.video.src =
+    APP.videoURL;
+
+
+  APP.video.load();
+
+
+  APP.trajectory = [];
+
+  APP.keyFrames = [];
+
+  APP.angleHistory = [];
+
+  APP.currentResults = null;
+
+}
+
+
+/* =========================================================
+   VIDEO CONTROL
 ========================================================= */
 
 function toggleVideo() {
 
-  if (!APP.video) return;
+  if (!APP.video) {
+    return;
+  }
 
 
-  if (APP.video.paused) {
+  if (
+    APP.video.paused
+  ) {
 
     APP.video.play();
+
+    if (
+      $("videoPlayPause")
+    ) {
+
+      $("videoPlayPause")
+        .textContent =
+        "Ⅱ";
+
+    }
 
   } else {
 
     APP.video.pause();
+
+    if (
+      $("videoPlayPause")
+    ) {
+
+      $("videoPlayPause")
+        .textContent =
+        "▶";
+
+    }
 
   }
 
 }
 
 
-function setSpeedActive(
-  id
+function setVideoSpeed(
+  speed
 ) {
 
-  document
-    .querySelectorAll(
-      ".speed-button"
-    )
-    .forEach(
-      button =>
-        button.classList.remove(
-          "active"
-        )
+  if (!APP.video) {
+    return;
+  }
+
+
+  APP.video.playbackRate =
+    speed;
+
+
+  $("videoSlow")
+    ?.classList.toggle(
+      "active",
+      speed === .5
     );
 
 
-  $(id)?.classList.add(
-    "active"
-  );
+  $("videoNormal")
+    ?.classList.toggle(
+      "active",
+      speed === 1
+    );
 
 }
 
 
 function previousFrame() {
 
-  if (!APP.video) return;
+  if (!APP.video) {
+    return;
+  }
 
 
   APP.video.pause();
+
 
   APP.video.currentTime =
     Math.max(
       0,
       APP.video.currentTime -
-      1 / 30
+      (
+        1 /
+        APP.videoFPS
+      )
     );
+
+
+  drawVideoCanvas();
 
 }
 
 
 function nextFrame() {
 
-  if (!APP.video) return;
+  if (!APP.video) {
+    return;
+  }
 
 
   APP.video.pause();
+
 
   APP.video.currentTime =
     Math.min(
       APP.video.duration || 0,
       APP.video.currentTime +
-      1 / 30
+      (
+        1 /
+        APP.videoFPS
+      )
     );
+
+
+  drawVideoCanvas();
 
 }
 
@@ -931,338 +822,7 @@ function nextFrame() {
    CANVAS
 ========================================================= */
 
-function resizePoseCanvas() {
-
-  const video =
-    $("analysisVideo");
-
-  const canvas =
-    $("poseCanvas");
-
-  if (!video ||
-      !canvas) {
-    return;
-  }
-
-
-  const rect =
-    video.getBoundingClientRect();
-
-
-  canvas.width =
-    Math.max(
-      1,
-      Math.round(rect.width)
-    );
-
-  canvas.height =
-    Math.max(
-      1,
-      Math.round(rect.height)
-    );
-
-}
-
-
-/* =========================================================
-   MEDIAPIPE
-========================================================= */
-
-function setupPose() {
-
-  if (
-    typeof Pose ===
-    "undefined"
-  ) {
-
-    console.warn(
-      "MediaPipe Pose library not loaded."
-    );
-
-    return;
-
-  }
-
-
-  try {
-
-    APP.pose =
-      new Pose({
-        locateFile: file =>
-          `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
-      });
-
-
-    APP.pose.setOptions({
-
-      modelComplexity: 1,
-
-      smoothLandmarks: true,
-
-      enableSegmentation: false,
-
-      smoothSegmentation: true,
-
-      minDetectionConfidence: .5,
-
-      minTrackingConfidence: .5
-
-    });
-
-
-    APP.pose.onResults(
-      handlePoseResults
-    );
-
-
-    APP.poseReady =
-      true;
-
-  } catch (error) {
-
-    console.error(
-      "Pose setup error:",
-      error
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   ANALYSIS
-========================================================= */
-
-function startAnalysis() {
-
-  if (!APP.video) {
-
-    showToast(
-      "영상을 먼저 업로드하세요."
-    );
-
-    return;
-
-  }
-
-
-  if (
-    !APP.video.src
-  ) {
-
-    showToast(
-      "영상을 먼저 업로드하세요."
-    );
-
-    return;
-
-  }
-
-
-  APP.analyzing =
-    true;
-
-  APP.frameData =
-    [];
-
-  APP.keyFrames =
-    [];
-
-
-  showToast(
-    "자세분석을 시작합니다."
-  );
-
-
-  analyzeLoop();
-
-}
-
-
-function stopAnalysis() {
-
-  APP.analyzing =
-    false;
-
-
-  if (
-    APP.animationId
-  ) {
-
-    cancelAnimationFrame(
-      APP.animationId
-    );
-
-    APP.animationId =
-      null;
-
-  }
-
-
-  findKeyFrames();
-
-  calculatePerformanceScores();
-
-  renderKeyFrames();
-
-  renderFeedback();
-
-  renderTrainingRecommendations();
-
-  updateReport();
-
-
-  showToast(
-    "자세분석이 종료되었습니다."
-  );
-
-}
-
-
-/* =========================================================
-   ANALYSIS LOOP
-========================================================= */
-
-async function analyzeLoop() {
-
-  if (!APP.analyzing) {
-    return;
-  }
-
-
-  if (
-    APP.video.readyState >= 2
-  ) {
-
-    if (
-      APP.poseReady &&
-      APP.pose
-    ) {
-
-      try {
-
-        await APP.pose.send({
-          image: APP.video
-        });
-
-      } catch (error) {
-
-        console.warn(
-          "Pose frame error:",
-          error
-        );
-
-      }
-
-    } else {
-
-      drawAnalysisPlaceholder();
-
-    }
-
-  }
-
-
-  APP.animationId =
-    requestAnimationFrame(
-      analyzeLoop
-    );
-
-}
-
-
-/* =========================================================
-   POSE RESULTS
-========================================================= */
-
-function handlePoseResults(
-  results
-) {
-
-  const canvas =
-    $("poseCanvas");
-
-  if (!canvas) return;
-
-
-  const ctx =
-    canvas.getContext(
-      "2d"
-    );
-
-
-  resizePoseCanvas();
-
-
-  ctx.clearRect(
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
-
-
-  if (
-    !results ||
-    !results.poseLandmarks
-  ) {
-
-    drawAnalysisPlaceholder();
-
-    return;
-
-  }
-
-
-  const landmarks =
-    results.poseLandmarks;
-
-
-  drawSkeleton(
-    ctx,
-    landmarks
-  );
-
-
-  calculateAngles(
-    landmarks
-  );
-
-
-  drawReferenceLines(
-    ctx,
-    landmarks
-  );
-
-
-  drawCenterOfMass(
-    ctx,
-    landmarks
-  );
-
-
-  drawJointAngles(
-    ctx,
-    landmarks
-  );
-
-
-  updateAngleUI();
-
-
-  saveFrameData(
-    landmarks
-  );
-
-}
-
-
-/* =========================================================
-   DRAW SKELETON
-========================================================= */
-
-const CONNECTIONS = [
+const POSE_CONNECTIONS = [
 
   [11, 12],
 
@@ -1292,601 +852,86 @@ const CONNECTIONS = [
 ];
 
 
-function drawSkeleton(
-  ctx,
-  landmarks
-) {
-
-  if (
-    !APP.options.skeleton
-  ) {
-    return;
-  }
-
-
-  const canvas =
-    ctx.canvas;
-
-
-  ctx.lineWidth =
-    3;
-
-  ctx.strokeStyle =
-    "#65e7ff";
-
-
-  CONNECTIONS.forEach(
-    ([a, b]) => {
-
-      const p1 =
-        landmarks[a];
-
-      const p2 =
-        landmarks[b];
-
-
-      if (
-        !p1 ||
-        !p2 ||
-        p1.visibility < .4 ||
-        p2.visibility < .4
-      ) {
-        return;
-      }
-
-
-      ctx.beginPath();
-
-      ctx.moveTo(
-        p1.x * canvas.width,
-        p1.y * canvas.height
-      );
-
-      ctx.lineTo(
-        p2.x * canvas.width,
-        p2.y * canvas.height
-      );
-
-      ctx.stroke();
-
-    }
-  );
-
-
-  landmarks.forEach(
-    point => {
-
-      if (
-        point.visibility < .4
-      ) {
-        return;
-      }
-
-
-      ctx.beginPath();
-
-      ctx.arc(
-        point.x * canvas.width,
-        point.y * canvas.height,
-        4,
-        0,
-        Math.PI * 2
-      );
-
-      ctx.fillStyle =
-        "#20a7ff";
-
-      ctx.fill();
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   ANGLES
-========================================================= */
-
-function calculateAngle(
-  a,
-  b,
-  c
-) {
-
-  const ab = {
-    x: a.x - b.x,
-    y: a.y - b.y
-  };
-
-  const cb = {
-    x: c.x - b.x,
-    y: c.y - b.y
-  };
-
-
-  const dot =
-    ab.x * cb.x +
-    ab.y * cb.y;
-
-
-  const mag1 =
-    Math.hypot(
-      ab.x,
-      ab.y
-    );
-
-
-  const mag2 =
-    Math.hypot(
-      cb.x,
-      cb.y
-    );
-
-
-  if (
-    mag1 === 0 ||
-    mag2 === 0
-  ) {
-    return 0;
-  }
-
-
-  const cos =
-    Math.max(
-      -1,
-      Math.min(
-        1,
-        dot /
-        (mag1 * mag2)
-      )
-    );
-
-
-  return Math.round(
-    Math.acos(cos) *
-    180 /
-    Math.PI
-  );
-
-}
-
-
-function calculateAngles(
-  p
-) {
-
-  if (!p) return;
-
-
-  APP.angles.leftHip =
-    calculateAngle(
-      p[11],
-      p[23],
-      p[25]
-    );
-
-
-  APP.angles.rightHip =
-    calculateAngle(
-      p[12],
-      p[24],
-      p[26]
-    );
-
-
-  APP.angles.leftKnee =
-    calculateAngle(
-      p[23],
-      p[25],
-      p[27]
-    );
-
-
-  APP.angles.rightKnee =
-    calculateAngle(
-      p[24],
-      p[26],
-      p[28]
-    );
-
-
-  APP.angles.leftAnkle =
-    calculateAngle(
-      p[25],
-      p[27],
-      p[31]
-    );
-
-
-  APP.angles.rightAnkle =
-    calculateAngle(
-      p[26],
-      p[28],
-      p[32]
-    );
-
-
-  APP.angles.leftElbow =
-    calculateAngle(
-      p[11],
-      p[13],
-      p[15]
-    );
-
-
-  APP.angles.rightElbow =
-    calculateAngle(
-      p[12],
-      p[14],
-      p[16]
-    );
-
-
-  const shoulderMid = midpoint(
-    p[11],
-    p[12]
-  );
-
-
-  const hipMid = midpoint(
-    p[23],
-    p[24]
-  );
-
-
-  if (
-    shoulderMid &&
-    hipMid
-  ) {
-
-    const dx =
-      shoulderMid.x -
-      hipMid.x;
-
-    const dy =
-      shoulderMid.y -
-      hipMid.y;
-
-
-    APP.angles.trunk =
-      Math.round(
-        Math.abs(
-          Math.atan2(
-            dx,
-            -dy
-          ) *
-          180 /
-          Math.PI
-        )
-      );
-
-  }
-
-}
-
-
-/* =========================================================
-   DRAW ANGLES
-========================================================= */
-
-function drawJointAngles(
-  ctx,
-  p
-) {
-
-  if (
-    !APP.options.angles
-  ) {
-    return;
-  }
-
-
-  const canvas =
-    ctx.canvas;
-
-
-  const labels = [
-
-    {
-      point: p[23],
-      value: APP.angles.leftHip
-    },
-
-    {
-      point: p[24],
-      value: APP.angles.rightHip
-    },
-
-    {
-      point: p[25],
-      value: APP.angles.leftKnee
-    },
-
-    {
-      point: p[26],
-      value: APP.angles.rightKnee
-    },
-
-    {
-      point: p[27],
-      value: APP.angles.leftAnkle
-    },
-
-    {
-      point: p[28],
-      value: APP.angles.rightAnkle
-    }
-
-  ];
-
-
-  ctx.font =
-    "bold 12px Arial";
-
-  ctx.textAlign =
-    "center";
-
-
-  labels.forEach(
-    item => {
-
-      if (
-        !item.point ||
-        item.point.visibility < .4
-      ) {
-        return;
-      }
-
-
-      const x =
-        item.point.x *
-        canvas.width;
-
-      const y =
-        item.point.y *
-        canvas.height;
-
-
-      ctx.fillStyle =
-        "#ffffff";
-
-      ctx.fillText(
-        `${item.value}°`,
-        x,
-        y - 10
-      );
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   REFERENCE LINES
-========================================================= */
-
-function drawReferenceLines(
-  ctx,
-  p
-) {
-
-  if (
-    !APP.options.baseline
-  ) {
-    return;
-  }
-
-
-  const canvas =
-    ctx.canvas;
-
-
-  const hip =
-    midpoint(
-      p[23],
-      p[24]
-    );
-
-
-  const shoulder =
-    midpoint(
-      p[11],
-      p[12]
-    );
-
-
-  if (
-    !hip ||
-    !shoulder
-  ) {
-    return;
-  }
-
-
-  /* 수직 기준선 */
-
-  ctx.save();
-
-  ctx.setLineDash(
-    [7, 6]
-  );
-
-  ctx.lineWidth =
-    2;
-
-  ctx.strokeStyle =
-    "#ffd34d";
-
-
-  const x =
-    hip.x *
-    canvas.width;
-
-
-  ctx.beginPath();
-
-  ctx.moveTo(
-    x,
-    0
-  );
-
-  ctx.lineTo(
-    x,
-    canvas.height
-  );
-
-  ctx.stroke();
-
-
-  /* 몸통 기준선 */
-
-  ctx.setLineDash([]);
-
-  ctx.strokeStyle =
-    "#a778ff";
-
-
-  ctx.beginPath();
-
-  ctx.moveTo(
-    shoulder.x *
-      canvas.width,
-    shoulder.y *
-      canvas.height
-  );
-
-  ctx.lineTo(
-    hip.x *
-      canvas.width,
-    hip.y *
-      canvas.height
-  );
-
-  ctx.stroke();
-
-
-  ctx.restore();
-
-}
-
-
-/* =========================================================
-   CENTER OF MASS
-========================================================= */
-
-function drawCenterOfMass(
-  ctx,
-  p
-) {
-
-  if (
-    !APP.options.center
-  ) {
-    return;
-  }
-
-
-  const points = [
-
-    p[11],
-    p[12],
-    p[23],
-    p[24],
-    p[25],
-    p[26]
-
-  ].filter(
-    point =>
-      point &&
-      point.visibility >= .4
-  );
-
-
-  if (!points.length) {
-    return;
-  }
-
-
-  const center =
-    points.reduce(
-      (sum, point) => ({
-        x:
-          sum.x +
-          point.x,
-
-        y:
-          sum.y +
-          point.y
-      }),
-      {
-        x: 0,
-        y: 0
-      }
-    );
-
-
-  center.x /=
-    points.length;
-
-  center.y /=
-    points.length;
-
-
-  const x =
-    center.x *
-    ctx.canvas.width;
-
-  const y =
-    center.y *
-    ctx.canvas.height;
-
-
-  ctx.beginPath();
-
-  ctx.arc(
-    x,
-    y,
-    7,
-    0,
-    Math.PI * 2
-  );
-
-  ctx.fillStyle =
-    "#ff5f73";
-
-  ctx.fill();
-
-
-  ctx.beginPath();
-
-  ctx.arc(
-    x,
-    y,
-    13,
-    0,
-    Math.PI * 2
-  );
-
-  ctx.strokeStyle =
-    "rgba(255,95,115,.5)";
-
-  ctx.stroke();
-
-}
-
-
-/* =========================================================
-   PLACEHOLDER
-========================================================= */
-
-function drawAnalysisPlaceholder() {
+function setupPoseCanvas() {
 
   const canvas =
     $("poseCanvas");
 
-  if (!canvas) return;
+  if (!canvas) {
+    return;
+  }
+
+
+  resizeCanvasToDisplaySize(
+    canvas
+  );
+
+}
+
+
+function resizeCanvasToDisplaySize(
+  canvas
+) {
+
+  const rect =
+    canvas.getBoundingClientRect();
+
+
+  const ratio =
+    window.devicePixelRatio ||
+    1;
+
+
+  const width =
+    Math.max(
+      1,
+      Math.floor(
+        rect.width *
+        ratio
+      )
+    );
+
+
+  const height =
+    Math.max(
+      1,
+      Math.floor(
+        rect.height *
+        ratio
+      )
+    );
+
+
+  if (
+    canvas.width !== width ||
+    canvas.height !== height
+  ) {
+
+    canvas.width =
+      width;
+
+    canvas.height =
+      height;
+
+  }
+
+}
+
+
+function drawVideoCanvas() {
+
+  const canvas =
+    $("poseCanvas");
+
+
+  if (!canvas) {
+    return;
+  }
+
+
+  resizeCanvasToDisplaySize(
+    canvas
+  );
 
 
   const ctx =
@@ -1901,6 +946,565 @@ function drawAnalysisPlaceholder() {
     canvas.width,
     canvas.height
   );
+
+
+  if (
+    APP.currentResults
+  ) {
+
+    drawPoseResults(
+      ctx,
+      canvas,
+      APP.currentResults
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   DRAW POSE
+========================================================= */
+
+function drawPoseResults(
+  ctx,
+  canvas,
+  results
+) {
+
+  const landmarks =
+    results.poseLandmarks;
+
+
+  if (
+    !landmarks ||
+    landmarks.length <
+    33
+  ) {
+
+    return;
+
+  }
+
+
+  const sx =
+    canvas.width;
+
+  const sy =
+    canvas.height;
+
+
+  /* 기준선 */
+
+  if (
+    APP.options.baseline
+  ) {
+
+    drawBaseline(
+      ctx,
+      landmarks,
+      sx,
+      sy
+    );
+
+  }
+
+
+  /* 궤적 */
+
+  if (
+    APP.options.trajectory
+  ) {
+
+    drawTrajectory(
+      ctx,
+      sx,
+      sy
+    );
+
+  }
+
+
+  /* skeleton */
+
+  if (
+    APP.options.skeleton
+  ) {
+
+    ctx.lineWidth =
+      Math.max(
+        2,
+        sx / 500
+      );
+
+    ctx.lineCap =
+      "round";
+
+    ctx.strokeStyle =
+      "#65e7ff";
+
+
+    POSE_CONNECTIONS
+      .forEach(
+        connection => {
+
+          const a =
+            landmarks[
+              connection[0]
+            ];
+
+          const b =
+            landmarks[
+              connection[1]
+            ];
+
+
+          if (
+            !a ||
+            !b ||
+            (a.visibility ?? 1) <
+              .35 ||
+            (b.visibility ?? 1) <
+              .35
+          ) {
+
+            return;
+
+          }
+
+
+          ctx.beginPath();
+
+          ctx.moveTo(
+            a.x * sx,
+            a.y * sy
+          );
+
+          ctx.lineTo(
+            b.x * sx,
+            b.y * sy
+          );
+
+          ctx.stroke();
+
+        }
+      );
+
+  }
+
+
+  /* joints */
+
+  landmarks.forEach(
+    landmark => {
+
+      if (
+        (landmark.visibility ?? 1) <
+        .35
+      ) {
+
+        return;
+
+      }
+
+
+      ctx.beginPath();
+
+      ctx.arc(
+        landmark.x * sx,
+        landmark.y * sy,
+        Math.max(
+          3,
+          sx / 180
+        ),
+        0,
+        Math.PI * 2
+      );
+
+      ctx.fillStyle =
+        "#ffffff";
+
+      ctx.fill();
+
+    }
+  );
+
+
+  /* center */
+
+  if (
+    APP.options.center
+  ) {
+
+    const center =
+      getBodyCenter(
+        landmarks
+      );
+
+
+    if (center) {
+
+      ctx.beginPath();
+
+      ctx.arc(
+        center.x * sx,
+        center.y * sy,
+        7,
+        0,
+        Math.PI * 2
+      );
+
+      ctx.fillStyle =
+        "#ffd34d";
+
+      ctx.fill();
+
+    }
+
+  }
+
+
+  /* angles */
+
+  if (
+    APP.options.angles
+  ) {
+
+    drawAngleLabels(
+      ctx,
+      landmarks,
+      sx,
+      sy
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   BASELINE
+========================================================= */
+
+function drawBaseline(
+  ctx,
+  lm,
+  sx,
+  sy
+) {
+
+  const shoulder =
+    midpoint(
+      lm[11],
+      lm[12]
+    );
+
+
+  const hip =
+    midpoint(
+      lm[23],
+      lm[24]
+    );
+
+
+  if (
+    !shoulder ||
+    !hip
+  ) {
+
+    return;
+
+  }
+
+
+  ctx.save();
+
+  ctx.lineWidth =
+    Math.max(
+      2,
+      sx / 600
+    );
+
+  ctx.setLineDash([
+    10,
+    7
+  ]);
+
+
+  /* trunk axis */
+
+  ctx.strokeStyle =
+    "#a778ff";
+
+  ctx.beginPath();
+
+  ctx.moveTo(
+    shoulder.x * sx,
+    shoulder.y * sy
+  );
+
+  ctx.lineTo(
+    hip.x * sx,
+    hip.y * sy
+  );
+
+  ctx.stroke();
+
+
+  /* vertical */
+
+  ctx.strokeStyle =
+    "#ffd34d";
+
+  ctx.beginPath();
+
+  ctx.moveTo(
+    hip.x * sx,
+    0
+  );
+
+  ctx.lineTo(
+    hip.x * sx,
+    sy
+  );
+
+  ctx.stroke();
+
+
+  /* horizontal shoulder */
+
+  ctx.setLineDash([
+    5,
+    5
+  ]);
+
+  ctx.strokeStyle =
+    "#55e6a5";
+
+  ctx.beginPath();
+
+  ctx.moveTo(
+    lm[11].x * sx,
+    lm[11].y * sy
+  );
+
+  ctx.lineTo(
+    lm[12].x * sx,
+    lm[12].y * sy
+  );
+
+  ctx.stroke();
+
+
+  ctx.restore();
+
+}
+
+
+/* =========================================================
+   TRAJECTORY
+========================================================= */
+
+function drawTrajectory(
+  ctx,
+  sx,
+  sy
+) {
+
+  if (
+    APP.trajectory.length <
+    2
+  ) {
+
+    return;
+
+  }
+
+
+  ctx.save();
+
+  ctx.strokeStyle =
+    "#55e6a5";
+
+  ctx.lineWidth =
+    Math.max(
+      2,
+      sx / 700
+    );
+
+  ctx.beginPath();
+
+
+  APP.trajectory.forEach(
+    (point, index) => {
+
+      if (index === 0) {
+
+        ctx.moveTo(
+          point.x * sx,
+          point.y * sy
+        );
+
+      } else {
+
+        ctx.lineTo(
+          point.x * sx,
+          point.y * sy
+        );
+
+      }
+
+    }
+  );
+
+
+  ctx.stroke();
+
+  ctx.restore();
+
+}
+
+
+/* =========================================================
+   ANGLE LABELS
+========================================================= */
+
+function drawAngleLabels(
+  ctx,
+  lm,
+  sx,
+  sy
+) {
+
+  const joints = [
+
+    {
+      name: "L KNEE",
+      points: [23,25,27]
+    },
+
+    {
+      name: "R KNEE",
+      points: [24,26,28]
+    },
+
+    {
+      name: "L HIP",
+      points: [11,23,25]
+    },
+
+    {
+      name: "R HIP",
+      points: [12,24,26]
+    },
+
+    {
+      name: "L ELBOW",
+      points: [11,13,15]
+    },
+
+    {
+      name: "R ELBOW",
+      points: [12,14,16]
+    }
+
+  ];
+
+
+  ctx.save();
+
+  ctx.font =
+    `${Math.max(
+      10,
+      sx / 95
+    )}px sans-serif`;
+
+  ctx.textBaseline =
+    "middle";
+
+
+  joints.forEach(
+    item => {
+
+      const a =
+        lm[item.points[0]];
+
+      const b =
+        lm[item.points[1]];
+
+      const c =
+        lm[item.points[2]];
+
+
+      if (
+        !a ||
+        !b ||
+        !c
+      ) {
+
+        return;
+
+      }
+
+
+      const value =
+        angle(
+          a,
+          b,
+          c
+        );
+
+
+      const x =
+        b.x * sx;
+
+
+      const y =
+        b.y * sy;
+
+
+      ctx.fillStyle =
+        "rgba(3,10,18,.8)";
+
+      const text =
+        `${Math.round(value)}°`;
+
+
+      const width =
+        ctx.measureText(
+          text
+        ).width +
+        10;
+
+
+      ctx.fillRect(
+        x - width / 2,
+        y - 18,
+        width,
+        18
+      );
+
+
+      ctx.fillStyle =
+        "#ffffff";
+
+
+      ctx.textAlign =
+        "center";
+
+
+      ctx.fillText(
+        text,
+        x,
+        y - 9
+      );
+
+    }
+  );
+
+
+  ctx.restore();
 
 }
 
@@ -1920,112 +1524,67 @@ function midpoint(
 
 
   return {
+
     x:
       (a.x + b.x) / 2,
 
     y:
-      (a.y + b.y) / 2
-  };
+      (a.y + b.y) / 2,
 
-}
-
-
-/* =========================================================
-   FRAME DATA
-========================================================= */
-
-function saveFrameData(
-  landmarks
-) {
-
-  if (!APP.analyzing) {
-    return;
-  }
-
-
-  const frame = {
-
-    time:
-      APP.video?.currentTime || 0,
-
-    angles:
-      {
-        ...APP.angles
-      },
-
-    center:
-      calculateCenter(
-        landmarks
-      ),
-
-    score:
-      calculateFrameScore(
-        landmarks
+    visibility:
+      Math.min(
+        a.visibility ?? 1,
+        b.visibility ?? 1
       )
 
   };
 
-
-  APP.frameData.push(
-    frame
-  );
-
-
-  if (
-    APP.frameData.length >
-    1000
-  ) {
-
-    APP.frameData.shift();
-
-  }
-
 }
 
 
 /* =========================================================
-   CENTER
+   BODY CENTER
 ========================================================= */
 
-function calculateCenter(
-  p
+function getBodyCenter(
+  lm
 ) {
 
-  const points = [
-
-    p[11],
-    p[12],
-    p[23],
-    p[24]
-
-  ].filter(Boolean);
+  const shoulder =
+    midpoint(
+      lm[11],
+      lm[12]
+    );
 
 
-  if (!points.length) {
-    return {
-      x: 0,
-      y: 0
-    };
+  const hip =
+    midpoint(
+      lm[23],
+      lm[24]
+    );
+
+
+  if (
+    !shoulder ||
+    !hip
+  ) {
+
+    return null;
+
   }
 
 
   return {
 
     x:
-      points.reduce(
-        (sum, item) =>
-          sum + item.x,
-        0
-      ) /
-      points.length,
+      (shoulder.x +
+       hip.x) /
+      2,
 
     y:
-      points.reduce(
-        (sum, item) =>
-          sum + item.y,
-        0
-      ) /
-      points.length
+      (shoulder.y +
+       hip.y) /
+      2
 
   };
 
@@ -2033,149 +1592,974 @@ function calculateCenter(
 
 
 /* =========================================================
-   FRAME SCORE
+   ANGLE CALCULATION
 ========================================================= */
 
-function calculateFrameScore(
-  p
+function calculateAllAngles(
+  lm
 ) {
 
-  let score = 75;
+  return {
+
+    leftHip:
+      angle(
+        lm[11],
+        lm[23],
+        lm[25]
+      ),
+
+    rightHip:
+      angle(
+        lm[12],
+        lm[24],
+        lm[26]
+      ),
+
+    leftKnee:
+      angle(
+        lm[23],
+        lm[25],
+        lm[27]
+      ),
+
+    rightKnee:
+      angle(
+        lm[24],
+        lm[26],
+        lm[28]
+      ),
+
+    leftAnkle:
+      angle(
+        lm[25],
+        lm[27],
+        lm[31]
+      ),
+
+    rightAnkle:
+      angle(
+        lm[26],
+        lm[28],
+        lm[32]
+      ),
+
+    leftElbow:
+      angle(
+        lm[11],
+        lm[13],
+        lm[15]
+      ),
+
+    rightElbow:
+      angle(
+        lm[12],
+        lm[14],
+        lm[16]
+      )
+
+  };
+
+}
 
 
-  const kneeLeft =
-    APP.angles.leftKnee;
+/* =========================================================
+   TRUNK ANGLE
+========================================================= */
 
-  const kneeRight =
-    APP.angles.rightKnee;
+function calculateTrunkAngle(
+  lm
+) {
 
-
-  if (
-    kneeLeft > 60 &&
-    kneeLeft < 175
-  ) {
-    score += 8;
-  }
-
-
-  if (
-    kneeRight > 60 &&
-    kneeRight < 175
-  ) {
-    score += 8;
-  }
+  const shoulder =
+    midpoint(
+      lm[11],
+      lm[12]
+    );
 
 
-  const difference =
-    Math.abs(
-      kneeLeft -
-      kneeRight
+  const hip =
+    midpoint(
+      lm[23],
+      lm[24]
     );
 
 
   if (
-    difference < 10
+    !shoulder ||
+    !hip
   ) {
-    score += 7;
-  } else if (
-    difference > 30
-  ) {
-    score -= 15;
+
+    return 0;
+
   }
 
 
-  return Math.max(
-    0,
-    Math.min(
-      100,
-      score
-    )
+  const dx =
+    shoulder.x -
+    hip.x;
+
+
+  const dy =
+    shoulder.y -
+    hip.y;
+
+
+  const radians =
+    Math.atan2(
+      Math.abs(dx),
+      Math.abs(dy)
+    );
+
+
+  return (
+    radians *
+    180 /
+    Math.PI
   );
 
 }
 
 
 /* =========================================================
-   KEY FRAMES
+   UPDATE ANGLE UI
 ========================================================= */
 
-function findKeyFrames() {
+function updateAngleUI(
+  angles,
+  trunk
+) {
+
+  setText(
+    "leftHipAngle",
+    `${Math.round(
+      angles.leftHip
+    )}°`
+  );
+
+
+  setText(
+    "rightHipAngle",
+    `${Math.round(
+      angles.rightHip
+    )}°`
+  );
+
+
+  setText(
+    "leftKneeAngle",
+    `${Math.round(
+      angles.leftKnee
+    )}°`
+  );
+
+
+  setText(
+    "rightKneeAngle",
+    `${Math.round(
+      angles.rightKnee
+    )}°`
+  );
+
+
+  setText(
+    "leftAnkleAngle",
+    `${Math.round(
+      angles.leftAnkle
+    )}°`
+  );
+
+
+  setText(
+    "rightAnkleAngle",
+    `${Math.round(
+      angles.rightAnkle
+    )}°`
+  );
+
+
+  setText(
+    "leftElbowAngle",
+    `${Math.round(
+      angles.leftElbow
+    )}°`
+  );
+
+
+  setText(
+    "rightElbowAngle",
+    `${Math.round(
+      angles.rightElbow
+    )}°`
+  );
+
+
+  setText(
+    "trunkAngle",
+    `${Math.round(
+      trunk
+    )}°`
+  );
+
+}
+
+
+/* =========================================================
+   POSE SETUP
+========================================================= */
+
+function initPose() {
 
   if (
-    !APP.frameData.length
+    typeof Pose ===
+    "undefined"
   ) {
 
-    APP.keyFrames =
-      [];
+    console.warn(
+      "MediaPipe Pose not loaded yet."
+    );
 
-    renderKeyFrames();
+    return false;
+
+  }
+
+
+  const pose =
+    new Pose({
+
+      locateFile:
+        file =>
+          `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+
+    });
+
+
+  pose.setOptions({
+
+    modelComplexity: 1,
+
+    smoothLandmarks: true,
+
+    enableSegmentation: false,
+
+    smoothSegmentation: false,
+
+    minDetectionConfidence: .5,
+
+    minTrackingConfidence: .5
+
+  });
+
+
+  pose.onResults(
+    handlePoseResults
+  );
+
+
+  APP.pose =
+    pose;
+
+  APP.poseReady =
+    true;
+
+
+  return true;
+
+}
+
+
+/* =========================================================
+   POSE RESULTS
+========================================================= */
+
+function handlePoseResults(
+  results
+) {
+
+  APP.currentResults =
+    results;
+
+
+  const lm =
+    results.poseLandmarks;
+
+
+  if (
+    !lm ||
+    lm.length <
+    33
+  ) {
+
+    drawVideoCanvas();
 
     return;
 
   }
 
 
-  const sorted =
-    APP.frameData
-      .map(
-        (frame, index) => ({
-          ...frame,
-          index
-        })
-      )
-      .sort(
-        (a, b) =>
-          b.score -
-          a.score
-      );
+  const angles =
+    calculateAllAngles(
+      lm
+    );
 
 
-  const selected = [];
+  const trunk =
+    calculateTrunkAngle(
+      lm
+    );
 
 
-  for (
-    const frame of sorted
-  ) {
-
-    const tooClose =
-      selected.some(
-        selectedFrame =>
-          Math.abs(
-            selectedFrame.time -
-            frame.time
-          ) < .35
-      );
+  updateAngleUI(
+    angles,
+    trunk
+  );
 
 
-    if (
-      !tooClose
-    ) {
+  const center =
+    getBodyCenter(
+      lm
+    );
 
-      selected.push(
-        frame
-      );
 
-    }
+  if (center) {
+
+    APP.trajectory.push({
+
+      x: center.x,
+
+      y: center.y,
+
+      time:
+        APP.video?.currentTime ||
+        0
+
+    });
 
 
     if (
-      selected.length >= 5
+      APP.trajectory.length >
+      250
     ) {
-      break;
+
+      APP.trajectory.shift();
+
     }
 
   }
 
 
-  APP.keyFrames =
-    selected.sort(
-      (a, b) =>
-        a.time -
-        b.time
+  APP.angleHistory.push({
+
+    time:
+      APP.video?.currentTime ||
+      0,
+
+    ...angles,
+
+    trunk
+
+  });
+
+
+  if (
+    APP.angleHistory.length >
+    500
+  ) {
+
+    APP.angleHistory.shift();
+
+  }
+
+
+  updatePerformanceMetrics(
+    lm,
+    angles,
+    trunk
+  );
+
+
+  if (
+    APP.options.keyFrames
+  ) {
+
+    detectKeyFrame(
+      lm,
+      angles,
+      trunk
+    );
+
+  }
+
+
+  drawVideoCanvas();
+
+}
+
+
+/* =========================================================
+   SEND FRAME
+========================================================= */
+
+async function analyzeCurrentFrame() {
+
+  if (
+    !APP.pose ||
+    !APP.video ||
+    APP.video.readyState <
+    2
+  ) {
+
+    return;
+
+  }
+
+
+  try {
+
+    await APP.pose.send({
+
+      image:
+        APP.video
+
+    });
+
+  } catch (error) {
+
+    console.error(
+      "Pose analysis error:",
+      error
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   START ANALYSIS
+========================================================= */
+
+async function startAnalysis() {
+
+  if (!APP.video) {
+
+    toast(
+      "먼저 분석할 영상을 불러오세요."
+    );
+
+    return;
+
+  }
+
+
+  if (
+    APP.video.readyState <
+    2
+  ) {
+
+    toast(
+      "영상이 아직 준비되지 않았습니다."
+    );
+
+    return;
+
+  }
+
+
+  if (
+    !APP.poseReady
+  ) {
+
+    initPose();
+
+  }
+
+
+  if (
+    !APP.pose
+  ) {
+
+    toast(
+      "자세분석 모듈을 불러오는 중입니다."
+    );
+
+    return;
+
+  }
+
+
+  APP.analyzing =
+    true;
+
+  APP.trajectory = [];
+
+  APP.keyFrames = [];
+
+  APP.angleHistory = [];
+
+  APP.lastPose = null;
+
+  APP.analysisStartedAt =
+    performance.now();
+
+
+  APP.video.playbackRate =
+    1;
+
+
+  try {
+
+    await APP.video.play();
+
+  } catch {
+
+    /* autoplay restriction */
+
+  }
+
+
+  analysisLoop();
+
+  toast(
+    "자세분석을 시작했습니다."
+  );
+
+}
+
+
+/* =========================================================
+   ANALYSIS LOOP
+========================================================= */
+
+async function analysisLoop() {
+
+  if (
+    !APP.analyzing
+  ) {
+
+    return;
+
+  }
+
+
+  await analyzeCurrentFrame();
+
+
+  APP.animationFrame =
+    requestAnimationFrame(
+      analysisLoop
+    );
+
+}
+
+
+/* =========================================================
+   STOP
+========================================================= */
+
+function stopAnalysis() {
+
+  APP.analyzing =
+    false;
+
+
+  if (
+    APP.animationFrame
+  ) {
+
+    cancelAnimationFrame(
+      APP.animationFrame
+    );
+
+  }
+
+
+  APP.animationFrame =
+    null;
+
+
+  APP.video?.pause();
+
+
+  calculateFinalAnalysis();
+
+  renderKeyFrames();
+
+  renderFeedback();
+
+  renderTraining();
+
+  updateAngleChart();
+
+  updateTrajectoryChart();
+
+  updateReport();
+
+
+  toast(
+    "자세분석이 완료되었습니다."
+  );
+
+}
+
+
+/* =========================================================
+   PERFORMANCE METRICS
+========================================================= */
+
+function updatePerformanceMetrics(
+  lm,
+  angles,
+  trunk
+) {
+
+  const kneeLeft =
+    angles.leftKnee;
+
+
+  const kneeRight =
+    angles.rightKnee;
+
+
+  const symmetry =
+    100 -
+    Math.min(
+      100,
+      Math.abs(
+        kneeLeft -
+        kneeRight
+      )
     );
 
 
+  const alignment =
+    clamp(
+      100 -
+      trunk * 2.2,
+      0,
+      100
+    );
+
+
+  const stability =
+    calculateStability();
+
+
+  const efficiency =
+    clamp(
+      (
+        symmetry +
+        alignment +
+        stability
+      ) / 3,
+      0,
+      100
+    );
+
+
+  updateMetric(
+    "stability",
+    stability
+  );
+
+
+  updateMetric(
+    "alignment",
+    alignment
+  );
+
+
+  updateMetric(
+    "symmetry",
+    symmetry
+  );
+
+
+  updateMetric(
+    "efficiency",
+    efficiency
+  );
+
+
+  const total =
+    Math.round(
+      (
+        stability +
+        alignment +
+        symmetry +
+        efficiency
+      ) / 4
+    );
+
+
+  setText(
+    "analysisTotalScore",
+    `${total} / 100`
+  );
+
+}
+
+
+/* =========================================================
+   STABILITY
+========================================================= */
+
+function calculateStability() {
+
+  if (
+    APP.trajectory.length <
+    3
+  ) {
+
+    return 0;
+
+  }
+
+
+  let movement = 0;
+
+
+  for (
+    let i = 1;
+    i <
+    APP.trajectory.length;
+    i++
+  ) {
+
+    movement +=
+      distance(
+        APP.trajectory[i],
+        APP.trajectory[i - 1]
+      );
+
+  }
+
+
+  const average =
+    movement /
+    (
+      APP.trajectory.length -
+      1
+    );
+
+
+  return clamp(
+    100 -
+    average * 500,
+    0,
+    100
+  );
+
+}
+
+
+/* =========================================================
+   UPDATE METRIC
+========================================================= */
+
+function updateMetric(
+  name,
+  value
+) {
+
+  const safe =
+    Math.round(
+      clamp(
+        value,
+        0,
+        100
+      )
+    );
+
+
+  setText(
+    `${name}Score`,
+    safe
+  );
+
+
+  const bar =
+    $(`${name}Bar`);
+
+
+  if (bar) {
+
+    bar.style.width =
+      `${safe}%`;
+
+  }
+
+}
+
+
+/* =========================================================
+   KEY FRAME DETECTION
+========================================================= */
+
+function detectKeyFrame(
+  lm,
+  angles,
+  trunk
+) {
+
+  const time =
+    APP.video?.currentTime ||
+    0;
+
+
+  const kneeAverage =
+    (
+      angles.leftKnee +
+      angles.rightKnee
+    ) / 2;
+
+
+  const velocity =
+    calculateCenterVelocity();
+
+
+  const previous =
+    APP.keyFrames[
+      APP.keyFrames.length - 1
+    ];
+
+
+  if (
+    previous &&
+    time -
+    previous.time <
+    .45
+  ) {
+
+    return;
+
+  }
+
+
+  let type =
+    "";
+
+
+  let score =
+    0;
+
+
+  if (
+    kneeAverage <
+    100
+  ) {
+
+    type =
+      "최저점";
+
+    score =
+      92;
+
+  } else if (
+    velocity >
+    .012
+  ) {
+
+    type =
+      "폭발구간";
+
+    score =
+      95;
+
+  } else if (
+    Math.abs(
+      trunk
+    ) >
+    12
+  ) {
+
+    type =
+      "자세변화";
+
+    score =
+      88;
+
+  }
+
+
+  if (!type) {
+    return;
+  }
+
+
+  APP.keyFrames.push({
+
+    time,
+
+    type,
+
+    score,
+
+    frame:
+      Math.round(
+        time *
+        APP.videoFPS
+      ),
+
+    knee:
+      Math.round(
+        kneeAverage
+      ),
+
+    trunk:
+      Math.round(
+        trunk
+      )
+
+  });
+
+
+  if (
+    APP.keyFrames.length >
+    12
+  ) {
+
+    APP.keyFrames.shift();
+
+  }
+
+
   renderKeyFrames();
+
+}
+
+
+/* =========================================================
+   CENTER VELOCITY
+========================================================= */
+
+function calculateCenterVelocity() {
+
+  if (
+    APP.trajectory.length <
+    2
+  ) {
+
+    return 0;
+
+  }
+
+
+  const a =
+    APP.trajectory[
+      APP.trajectory.length - 2
+    ];
+
+
+  const b =
+    APP.trajectory[
+      APP.trajectory.length - 1
+    ];
+
+
+  return distance(
+    a,
+    b
+  );
 
 }
 
@@ -2189,9 +2573,16 @@ function renderKeyFrames() {
   const container =
     $("keyFrameList");
 
+
   if (!container) {
     return;
   }
+
+
+  setText(
+    "keyFrameCount",
+    APP.keyFrames.length
+  );
 
 
   if (
@@ -2200,195 +2591,117 @@ function renderKeyFrames() {
 
     container.innerHTML = `
       <div class="empty-state">
-        분석 후 자동으로 핵심 프레임이 추출됩니다.
+        분석 후 자동 추출됩니다.
       </div>
     `;
-
-    if ($("keyFrameCount")) {
-      $("keyFrameCount").textContent =
-        "0";
-    }
 
     return;
 
   }
 
 
-  if ($("keyFrameCount")) {
-    $("keyFrameCount").textContent =
-      APP.keyFrames.length;
-  }
-
-
   container.innerHTML =
-    APP.keyFrames.map(
-      (frame, index) => `
+    APP.keyFrames
+      .map(
+        (frame, index) => `
 
-        <button
-          class="key-frame-item"
-          data-key-time="${frame.time}"
-          type="button"
-        >
+          <button
+            type="button"
+            class="key-frame-item"
+            data-key-time="${frame.time}"
+          >
 
-          <span class="key-frame-number">
-            ${index + 1}
-          </span>
-
-          <span>
-
-            <strong>
-              핵심 프레임 ${index + 1}
-            </strong>
-
-            <span>
-              ${formatTime(frame.time)}
-              · 안정성 ${Math.round(frame.score)}
+            <span
+              class="key-frame-number"
+            >
+              ${index + 1}
             </span>
 
-          </span>
+            <span>
 
-          <span>
-            →
-          </span>
+              <strong>
+                ${frame.type}
+              </strong>
 
-        </button>
+              <span>
+                ${frame.time.toFixed(2)}초
+              </span>
 
-      `
-    ).join("");
+            </span>
+
+            <span>
+              ${frame.score}
+            </span>
+
+          </button>
+
+        `
+      )
+      .join("");
 
 
   container
     .querySelectorAll(
       "[data-key-time]"
     )
-    .forEach(button => {
+    .forEach(
+      button => {
 
-      button.addEventListener(
-        "click",
-        () => {
+        button.addEventListener(
+          "click",
+          () => {
 
-          if (!APP.video) {
-            return;
+            if (
+              APP.video
+            ) {
+
+              APP.video.currentTime =
+                Number(
+                  button.dataset.keyTime
+                );
+
+              APP.video.pause();
+
+              analyzeCurrentFrame();
+
+            }
+
           }
+        );
 
-
-          APP.video.pause();
-
-          APP.video.currentTime =
-            Number(
-              button.dataset.keyTime
-            );
-
-        }
-      );
-
-    });
+      }
+    );
 
 }
 
 
 /* =========================================================
-   PERFORMANCE SCORE
+   FINAL ANALYSIS
 ========================================================= */
 
-function calculatePerformanceScores() {
-
-  if (
-    !APP.frameData.length
-  ) {
-
-    APP.scores = {
-      total: 0,
-      stability: 0,
-      alignment: 0,
-      symmetry: 0,
-      efficiency: 0
-    };
-
-    updateScoreUI();
-
-    return;
-
-  }
-
-
-  const frames =
-    APP.frameData;
-
-
-  const averageFrameScore =
-    frames.reduce(
-      (sum, frame) =>
-        sum +
-        frame.score,
-      0
-    ) /
-    frames.length;
-
-
-  const kneeDiff =
-    frames.reduce(
-      (sum, frame) =>
-        sum +
-        Math.abs(
-          frame.angles.leftKnee -
-          frame.angles.rightKnee
-        ),
-      0
-    ) /
-    frames.length;
-
-
-  const symmetry =
-    Math.max(
-      0,
-      Math.min(
-        100,
-        100 -
-        kneeDiff * 2
-      )
-    );
-
+function calculateFinalAnalysis() {
 
   const stability =
-    Math.max(
-      0,
-      Math.min(
-        100,
-        averageFrameScore
-      )
+    getMetricValue(
+      "stabilityScore"
     );
 
 
   const alignment =
-    Math.max(
-      0,
-      Math.min(
-        100,
-        averageFrameScore -
-        Math.abs(
-          frames.reduce(
-            (sum, frame) =>
-              sum +
-              Math.abs(
-                frame.angles.trunk
-              ),
-            0
-          ) /
-          frames.length
-        ) *
-        .25
-      )
+    getMetricValue(
+      "alignmentScore"
+    );
+
+
+  const symmetry =
+    getMetricValue(
+      "symmetryScore"
     );
 
 
   const efficiency =
-    Math.round(
-      (
-        stability +
-        alignment +
-        symmetry
-      ) / 3
+    getMetricValue(
+      "efficiencyScore"
     );
 
 
@@ -2403,138 +2716,19 @@ function calculatePerformanceScores() {
     );
 
 
-  APP.scores = {
+  APP.finalMetrics = {
 
-    total,
+    stability,
 
-    stability:
-      Math.round(stability),
+    alignment,
 
-    alignment:
-      Math.round(alignment),
+    symmetry,
 
-    symmetry:
-      Math.round(symmetry),
+    efficiency,
 
-    efficiency
+    total
 
   };
-
-
-  updateScoreUI();
-
-}
-
-
-/* =========================================================
-   SCORE UI
-========================================================= */
-
-function updateScoreUI() {
-
-  const s =
-    APP.scores;
-
-
-  setText(
-    "analysisTotalScore",
-    `${s.total} / 100`
-  );
-
-
-  setText(
-    "stabilityScore",
-    s.stability
-  );
-
-  setText(
-    "alignmentScore",
-    s.alignment
-  );
-
-  setText(
-    "symmetryScore",
-    s.symmetry
-  );
-
-  setText(
-    "efficiencyScore",
-    s.efficiency
-  );
-
-
-  setBar(
-    "stabilityBar",
-    s.stability
-  );
-
-  setBar(
-    "alignmentBar",
-    s.alignment
-  );
-
-  setBar(
-    "symmetryBar",
-    s.symmetry
-  );
-
-  setBar(
-    "efficiencyBar",
-    s.efficiency
-  );
-
-}
-
-
-/* =========================================================
-   ANGLE UI
-========================================================= */
-
-function updateAngleUI() {
-
-  const a =
-    APP.angles;
-
-
-  setText(
-    "leftHipAngle",
-    `${a.leftHip}°`
-  );
-
-  setText(
-    "rightHipAngle",
-    `${a.rightHip}°`
-  );
-
-  setText(
-    "leftKneeAngle",
-    `${a.leftKnee}°`
-  );
-
-  setText(
-    "rightKneeAngle",
-    `${a.rightKnee}°`
-  );
-
-  setText(
-    "rightKneeAngle2",
-    `${a.rightKnee}°`
-  );
-
-  setText(
-    "leftElbowAngle",
-    `${a.leftElbow}°`
-  );
-
-  setText(
-    "rightElbowAngle",
-    `${a.rightElbow}°`
-  );
-
-  setText(
-    "trunkAngle",
-    `${a.trunk}°`
-  );
 
 }
 
@@ -2545,115 +2739,166 @@ function updateAngleUI() {
 
 function renderFeedback() {
 
-  const containers = [
-    $("analysisFeedback"),
-    $("feedbackList")
-  ].filter(Boolean);
+  const container =
+    $("analysisFeedback");
 
 
-  const s =
-    APP.scores;
+  if (!container) {
+    return;
+  }
+
+
+  const metrics =
+    APP.finalMetrics ||
+    {
+
+      stability: 0,
+
+      alignment: 0,
+
+      symmetry: 0,
+
+      efficiency: 0,
+
+      total: 0
+
+    };
 
 
   const feedback = [];
 
 
   if (
-    s.symmetry < 70
+    metrics.alignment <
+    75
   ) {
 
     feedback.push({
-      title: "좌우 대칭성 개선",
+
+      title:
+        "몸통 정렬",
+
       text:
-        "좌우 무릎 각도 차이가 크게 나타나는 구간이 있습니다. 한쪽에 체중이 과도하게 실리지 않도록 동작을 천천히 반복해보세요."
+        "동작 중 몸통축의 흔들림이 크게 나타났습니다. 골반과 흉곽을 안정적으로 유지하는 훈련이 필요합니다."
+
     });
 
   } else {
 
     feedback.push({
-      title: "좌우 밸런스 양호",
+
+      title:
+        "몸통 정렬 양호",
+
       text:
-        "좌우 하지 움직임의 차이가 비교적 작습니다. 현재의 움직임 패턴을 유지하면서 속도를 높이는 훈련을 권장합니다."
+        "분석 구간에서 몸통축이 비교적 안정적으로 유지되었습니다."
+
     });
 
   }
 
 
   if (
-    s.alignment < 70
+    metrics.symmetry <
+    75
   ) {
 
     feedback.push({
-      title: "신체 정렬 개선",
+
+      title:
+        "좌우 대칭성",
+
       text:
-        "몸통과 하지의 정렬이 흔들리는 구간이 확인됩니다. 코어 안정성과 고관절 조절 능력을 함께 훈련하세요."
+        "좌우 무릎 관절각 차이가 나타났습니다. 한쪽에 체중이 몰리지 않는지 확인하세요."
+
     });
 
   } else {
 
     feedback.push({
-      title: "정렬 상태 양호",
+
+      title:
+        "좌우 대칭성 양호",
+
       text:
-        "분석 구간에서 중심축을 비교적 안정적으로 유지하고 있습니다."
+        "좌우 관절 움직임의 차이가 비교적 작게 나타났습니다."
+
     });
 
   }
 
 
   if (
-    s.stability < 70
+    metrics.stability <
+    75
   ) {
 
     feedback.push({
-      title: "동작 안정성 개선",
+
+      title:
+        "중심 안정성",
+
       text:
-        "착지 및 방향전환 구간에서 안정성을 높이는 훈련이 필요합니다."
+        "신체 중심의 이동 폭이 크게 나타났습니다. 코어 안정성과 착지 제어를 함께 훈련하세요."
+
     });
 
   } else {
 
     feedback.push({
-      title: "동작 안정성 양호",
+
+      title:
+        "중심 안정성 양호",
+
       text:
-        "전체 동작에서 중심 이동이 비교적 안정적입니다."
+        "신체 중심의 움직임이 비교적 안정적으로 유지되었습니다."
+
     });
 
   }
 
 
-  containers.forEach(
-    container => {
+  container.innerHTML =
+    feedback
+      .map(
+        item => `
 
-      container.innerHTML =
-        feedback.map(
-          item => `
+          <div class="feedback-item">
 
-            <div class="feedback-item">
+            <strong>
+              ${item.title}
+            </strong>
 
-              <strong>
-                ${item.title}
-              </strong>
+            <p>
+              ${item.text}
+            </p>
 
-              <p>
-                ${item.text}
-              </p>
+          </div>
 
-            </div>
+        `
+      )
+      .join("");
 
-          `
-        ).join("");
 
-    }
-  );
+  const report =
+    $("feedbackList");
+
+
+  if (report) {
+
+    report.innerHTML =
+      container.innerHTML;
+
+  }
 
 }
 
 
 /* =========================================================
-   TRAINING RECOMMENDATION
+   TRAINING
 ========================================================= */
 
-function renderTrainingRecommendations() {
+function renderTraining() {
 
   const container =
     $("trainingRecommendations");
@@ -2664,505 +2909,249 @@ function renderTrainingRecommendations() {
   }
 
 
-  const training = [];
+  const metrics =
+    APP.finalMetrics ||
+    {};
+
+
+  const recommendations = [];
 
 
   if (
-    APP.scores.stability < 80
+    Number(
+      metrics.stability
+    ) < 80
   ) {
 
-    training.push(
-      [
-        "싱글레그 밸런스",
-        "한발 서기 30초 × 3세트",
-        "안정성"
-      ]
-    );
+    recommendations.push({
 
-    training.push(
-      [
-        "스플릿 스쿼트",
-        "좌우 8~10회 × 4세트",
-        "하지"
-      ]
-    );
+      tag: "STABILITY",
+
+      title:
+        "코어 안정성",
+
+      description:
+        "플랭크와 데드버그를 이용해 몸통 흔들림을 줄이는 훈련",
+
+      meta:
+        "30~45초 × 4세트"
+
+    });
 
   }
 
 
   if (
-    APP.scores.symmetry < 80
+    Number(
+      metrics.alignment
+    ) < 80
   ) {
 
-    training.push(
-      [
-        "싱글레그 스쿼트",
-        "좌우 6~8회 × 3세트",
-        "대칭성"
-      ]
-    );
+    recommendations.push({
+
+      tag: "ALIGNMENT",
+
+      title:
+        "하체 정렬",
+
+      description:
+        "스쿼트와 싱글레그 동작에서 무릎과 발끝 방향을 맞추는 훈련",
+
+      meta:
+        "8~12회 × 4세트"
+
+    });
 
   }
 
 
   if (
-    APP.scores.alignment < 80
+    Number(
+      metrics.symmetry
+    ) < 80
   ) {
 
-    training.push(
-      [
-        "데드버그",
-        "좌우 10회 × 3세트",
-        "코어"
-      ]
-    );
+    recommendations.push({
 
-    training.push(
-      [
-        "사이드 플랭크",
-        "좌우 30초 × 3세트",
-        "정렬"
-      ]
-    );
+      tag: "SYMMETRY",
+
+      title:
+        "좌우 밸런스",
+
+      description:
+        "싱글레그 스쿼트와 런지를 활용한 좌우 균형 훈련",
+
+      meta:
+        "좌우 8~10회 × 3세트"
+
+    });
 
   }
 
 
-  training.push(
-    [
-      "점프 착지 드릴",
-      "5회 × 4세트",
-      "체대입시"
-    ]
-  );
+  recommendations.push({
 
+    tag: "POWER",
 
-  training.push(
-    [
-      "고관절 가동성",
-      "좌우 30초 × 3세트",
-      "가동성"
-    ]
-  );
+    title:
+      "폭발력",
+
+    description:
+      "동작의 추진력을 높이기 위한 점프 및 빠른 지면반력 훈련",
+
+    meta:
+      "5회 × 4세트"
+
+  });
 
 
   container.innerHTML =
-    training.map(
-      item => `
+    recommendations
+      .slice(
+        0,
+        4
+      )
+      .map(
+        item => `
 
-        <div class="training-card">
+          <div class="training-card">
 
-          <span class="training-tag">
-            ${item[2]}
-          </span>
-
-          <strong>
-            ${item[0]}
-          </strong>
-
-          <small>
-            ${item[1]}
-          </small>
-
-          <div class="training-meta">
-            <span>
-              맞춤 추천
+            <span class="training-tag">
+              ${item.tag}
             </span>
+
+            <strong>
+              ${item.title}
+            </strong>
+
+            <small>
+              ${item.description}
+            </small>
+
+            <div class="training-meta">
+              <span>
+                RECOMMENDED
+              </span>
+
+              <span>
+                ${item.meta}
+              </span>
+            </div>
+
           </div>
 
-        </div>
-
-      `
-    ).join("");
-
-}
-
-
-/* =========================================================
-   REPORT
-========================================================= */
-
-function updateReport() {
-
-  setText(
-    "reportTotalScore",
-    `${APP.scores.total}/100`
-  );
-
-  setText(
-    "reportStability",
-    APP.scores.stability
-  );
-
-  setText(
-    "reportAlignment",
-    APP.scores.alignment
-  );
-
-  setText(
-    "reportSymmetry",
-    APP.scores.symmetry
-  );
-
-  setText(
-    "reportEfficiency",
-    APP.scores.efficiency
-  );
-
-
-  createRadarChart(
-    "reportRadar",
-    "reportRadar"
-  );
-
-  updateRadar(
-    "reportRadar"
-  );
-
-
-  renderFeedback();
+        `
+      )
+      .join("");
 
 }
 
 
 /* =========================================================
-   COMPARISON
+   CHARTS
 ========================================================= */
 
-function updateComparison() {
-
-  const records =
-    getRecords();
-
-
-  const before =
-    records[
-      records.length - 2
-    ];
-
-  const after =
-    records[
-      records.length - 1
-    ];
-
-
-  const beforeBox =
-    $("comparisonBefore");
-
-  const afterBox =
-    $("comparisonAfter");
-
+function destroyChart(
+  name
+) {
 
   if (
-    beforeBox &&
-    before
+    APP.charts[name]
   ) {
 
-    beforeBox.innerHTML = `
+    APP.charts[name].destroy();
 
-      <div>
-
-        <strong>
-          ${before.eventName}
-        </strong>
-
-        <p>
-          이전 기록
-        </p>
-
-        <b>
-          ${before.score}점
-        </b>
-
-      </div>
-
-    `;
+    APP.charts[name] =
+      null;
 
   }
 
-
-  if (
-    afterBox &&
-    after
-  ) {
-
-    afterBox.innerHTML = `
-
-      <div>
-
-        <strong>
-          ${after.eventName}
-        </strong>
-
-        <p>
-          최근 기록
-        </p>
-
-        <b>
-          ${after.score}점
-        </b>
-
-      </div>
-
-    `;
-
-  }
-
-
-  const metrics =
-    $("comparisonMetrics");
-
-
-  if (
-    !metrics ||
-    !before ||
-    !after
-  ) {
-    return;
-  }
-
-
-  const change =
-    Number(after.score || 0) -
-    Number(before.score || 0);
-
-
-  metrics.innerHTML = `
-
-    <div class="comparison-metric">
-
-      <span>
-        이전
-      </span>
-
-      <strong>
-        ${before.score}
-      </strong>
-
-    </div>
-
-
-    <div class="comparison-metric">
-
-      <span>
-        현재
-      </span>
-
-      <strong>
-        ${after.score}
-      </strong>
-
-    </div>
-
-
-    <div class="comparison-metric">
-
-      <span>
-        변화
-      </span>
-
-      <strong class="${
-        change >= 0
-          ? "change-up"
-          : "change-down"
-      }">
-
-        ${
-          change >= 0
-            ? "+"
-            : ""
-        }${change}
-
-      </strong>
-
-    </div>
-
-  `;
-
 }
 
 
 /* =========================================================
-   PRINT
+   PERFORMANCE CHART
 ========================================================= */
 
-function setupPrint() {
-
-  $("printReportButton")
-    ?.addEventListener(
-      "click",
-      () => {
-
-        updateReport();
-
-        window.print();
-
-      }
-    );
-
-}
-
-
-/* =========================================================
-   TOGGLES
-========================================================= */
-
-function setupAnalysisToggles() {
-
-  const labels =
-    document.querySelectorAll(
-      ".analysis-toggles label"
-    );
-
-
-  labels.forEach(
-    label => {
-
-      const checkbox =
-        label.querySelector(
-          "input"
-        );
-
-
-      if (!checkbox) {
-        return;
-      }
-
-
-      checkbox.addEventListener(
-        "change",
-        () => {
-
-          const text =
-            label
-              .innerText
-              .trim();
-
-
-          if (
-            text.includes(
-              "스켈레톤"
-            )
-          ) {
-
-            APP.options.skeleton =
-              checkbox.checked;
-
-          }
-
-          else if (
-            text.includes(
-              "관절각"
-            )
-          ) {
-
-            APP.options.angles =
-              checkbox.checked;
-
-          }
-
-          else if (
-            text.includes(
-              "관절 궤적"
-            )
-          ) {
-
-            APP.options.trajectory =
-              checkbox.checked;
-
-          }
-
-          else if (
-            text.includes(
-              "기준선"
-            )
-          ) {
-
-            APP.options.baseline =
-              checkbox.checked;
-
-          }
-
-          else if (
-            text.includes(
-              "신체 중심"
-            )
-          ) {
-
-            APP.options.center =
-              checkbox.checked;
-
-          }
-
-          else if (
-            text.includes(
-              "자동 핵심프레임"
-            )
-          ) {
-
-            APP.options.keyFrames =
-              checkbox.checked;
-
-          }
-
-        }
-      );
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   ANGLE CHART
-========================================================= */
-
-function createAngleChart() {
-
-  const canvas =
-    $("angleChart");
+function updateDashboardCharts() {
 
   if (
-    !canvas ||
     typeof Chart ===
     "undefined"
   ) {
+
+    return;
+
+  }
+
+
+  const canvas =
+    $("performanceChart");
+
+
+  if (!canvas) {
     return;
   }
 
 
+  const records =
+    window.SeolcheonEvents
+      ?.getRecords?.() ||
+    [];
+
+
+  const recent =
+    records
+      .slice()
+      .reverse()
+      .slice(
+        -10
+      );
+
+
   destroyChart(
-    "angle"
+    "performance"
   );
 
 
-  APP.charts.angle =
+  APP.charts.performance =
     new Chart(
       canvas,
       {
-        type: "line",
+
+        type:
+          "line",
 
         data: {
 
-          labels: [],
+          labels:
+            recent.map(
+              (_, index) =>
+                `${index + 1}`
+            ),
 
           datasets: [
 
             {
-              label: "좌측 무릎",
-              data: [],
-              borderWidth: 2,
-              tension: .3,
-              pointRadius: 0
-            },
 
-            {
-              label: "우측 무릎",
-              data: [],
-              borderWidth: 2,
-              tension: .3,
-              pointRadius: 0
+              label:
+                "실기 점수",
+
+              data:
+                recent.map(
+                  record =>
+                    record.score
+                ),
+
+              tension:
+                .35,
+
+              fill:
+                true,
+
+              borderWidth:
+                2
+
             }
 
           ]
@@ -3171,21 +3160,224 @@ function createAngleChart() {
 
         options: {
 
-          responsive: true,
+          responsive:
+            true,
 
-          maintainAspectRatio: false,
+          maintainAspectRatio:
+            false,
 
           plugins: {
+
             legend: {
-              display: true
+              display:
+                false
             }
+
           },
 
           scales: {
 
             y: {
-              min: 0,
-              max: 190
+
+              min:
+                0,
+
+              max:
+                100,
+
+              grid: {
+
+                color:
+                  "rgba(255,255,255,.05)"
+
+              },
+
+              ticks: {
+
+                color:
+                  "#71859a"
+
+              }
+
+            },
+
+            x: {
+
+              grid: {
+
+                display:
+                  false
+
+              },
+
+              ticks: {
+
+                color:
+                  "#71859a"
+
+              }
+
+            }
+
+          }
+
+        }
+
+      }
+    );
+
+
+  renderDashboardRadar();
+
+}
+
+
+/* =========================================================
+   RADAR
+========================================================= */
+
+function renderDashboardRadar() {
+
+  const canvas =
+    $("dashboardRadar");
+
+
+  if (
+    !canvas ||
+    typeof Chart ===
+    "undefined"
+  ) {
+
+    return;
+
+  }
+
+
+  destroyChart(
+    "dashboardRadar"
+  );
+
+
+  APP.charts.dashboardRadar =
+    new Chart(
+      canvas,
+      {
+
+        type:
+          "radar",
+
+        data: {
+
+          labels: [
+
+            "스피드",
+
+            "순발력",
+
+            "근력",
+
+            "근지구력",
+
+            "유연성",
+
+            "지구력"
+
+          ],
+
+          datasets: [
+
+            {
+
+              label:
+                "현재 프로파일",
+
+              data: [
+
+                78,
+                84,
+                72,
+                80,
+                68,
+                76
+
+              ],
+
+              borderWidth:
+                2,
+
+              backgroundColor:
+                "rgba(101,231,255,.08)"
+
+            }
+
+          ]
+
+        },
+
+        options: {
+
+          responsive:
+            true,
+
+          maintainAspectRatio:
+            false,
+
+          scales: {
+
+            r: {
+
+              min:
+                0,
+
+              max:
+                100,
+
+              ticks: {
+
+                display:
+                  false
+
+              },
+
+              grid: {
+
+                color:
+                  "rgba(255,255,255,.07)"
+
+              },
+
+              angleLines: {
+
+                color:
+                  "rgba(255,255,255,.07)"
+
+              },
+
+              pointLabels: {
+
+                color:
+                  "#8da0b5",
+
+                font: {
+
+                  size:
+                    9
+
+                }
+
+              }
+
+            }
+
+          },
+
+          plugins: {
+
+            legend: {
+
+              display:
+                false
+
             }
 
           }
@@ -3199,51 +3391,210 @@ function createAngleChart() {
 
 
 /* =========================================================
-   UPDATE ANGLE CHART
+   ANGLE CHART
 ========================================================= */
 
 function updateAngleChart() {
 
-  const chart =
-    APP.charts.angle;
-
-  if (!chart) return;
+  const canvas =
+    $("angleChart");
 
 
-  chart.data.labels =
-    APP.frameData.map(
-      (_, index) =>
-        index + 1
+  if (
+    !canvas ||
+    typeof Chart ===
+    "undefined"
+  ) {
+
+    return;
+
+  }
+
+
+  destroyChart(
+    "angles"
+  );
+
+
+  const history =
+    APP.angleHistory
+      .slice(
+        -80
+      );
+
+
+  APP.charts.angles =
+    new Chart(
+      canvas,
+      {
+
+        type:
+          "line",
+
+        data: {
+
+          labels:
+            history.map(
+              item =>
+                item.time.toFixed(1)
+            ),
+
+          datasets: [
+
+            {
+
+              label:
+                "좌측 무릎",
+
+              data:
+                history.map(
+                  item =>
+                    item.leftKnee
+                ),
+
+              tension:
+                .25,
+
+              borderWidth:
+                2,
+
+              pointRadius:
+                0
+
+            },
+
+            {
+
+              label:
+                "우측 무릎",
+
+              data:
+                history.map(
+                  item =>
+                    item.rightKnee
+                ),
+
+              tension:
+                .25,
+
+              borderWidth:
+                2,
+
+              pointRadius:
+                0
+
+            },
+
+            {
+
+              label:
+                "몸통 기울기",
+
+              data:
+                history.map(
+                  item =>
+                    item.trunk
+                ),
+
+              tension:
+                .25,
+
+              borderWidth:
+                2,
+
+              pointRadius:
+                0
+
+            }
+
+          ]
+
+        },
+
+        options: {
+
+          responsive:
+            true,
+
+          maintainAspectRatio:
+            false,
+
+          interaction: {
+
+            mode:
+              "index",
+
+            intersect:
+              false
+
+          },
+
+          scales: {
+
+            x: {
+
+              ticks: {
+
+                color:
+                  "#71859a",
+
+                maxTicksLimit:
+                  8
+
+              },
+
+              grid: {
+
+                color:
+                  "rgba(255,255,255,.04)"
+
+              }
+
+            },
+
+            y: {
+
+              min:
+                0,
+
+              max:
+                190,
+
+              ticks: {
+
+                color:
+                  "#71859a"
+
+              },
+
+              grid: {
+
+                color:
+                  "rgba(255,255,255,.04)"
+
+              }
+
+            }
+
+          }
+
+        }
+
+      }
     );
-
-
-  chart.data.datasets[0].data =
-    APP.frameData.map(
-      frame =>
-        frame.angles.leftKnee
-    );
-
-
-  chart.data.datasets[1].data =
-    APP.frameData.map(
-      frame =>
-        frame.angles.rightKnee
-    );
-
-
-  chart.update();
 
 }
 
 
 /* =========================================================
-   TRAJECTORY
+   TRAJECTORY CHART
 ========================================================= */
 
-function drawTrajectory() {
+function updateTrajectoryChart() {
 
   const canvas =
     $("trajectoryCanvas");
+
 
   if (!canvas) {
     return;
@@ -3256,28 +3607,37 @@ function drawTrajectory() {
     );
 
 
-  const width =
-    canvas.clientWidth || 600;
+  const rect =
+    canvas.getBoundingClientRect();
 
-  const height =
-    canvas.clientHeight || 300;
+
+  const ratio =
+    window.devicePixelRatio ||
+    1;
 
 
   canvas.width =
-    width * devicePixelRatio;
+    rect.width *
+    ratio;
+
 
   canvas.height =
-    height * devicePixelRatio;
+    rect.height *
+    ratio;
 
 
-  ctx.setTransform(
-    devicePixelRatio,
-    0,
-    0,
-    devicePixelRatio,
-    0,
-    0
+  ctx.scale(
+    ratio,
+    ratio
   );
+
+
+  const width =
+    rect.width;
+
+
+  const height =
+    rect.height;
 
 
   ctx.clearRect(
@@ -3288,39 +3648,153 @@ function drawTrajectory() {
   );
 
 
-  if (
-    !APP.frameData.length
+  /* grid */
+
+  ctx.strokeStyle =
+    "rgba(255,255,255,.05)";
+
+  ctx.lineWidth =
+    1;
+
+
+  for (
+    let x = 0;
+    x < width;
+    x += 40
   ) {
-    return;
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      x,
+      0
+    );
+
+    ctx.lineTo(
+      x,
+      height
+    );
+
+    ctx.stroke();
+
   }
 
 
-  const points =
-    APP.frameData.map(
-      frame =>
-        frame.center
+  for (
+    let y = 0;
+    y < height;
+    y += 40
+  ) {
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      0,
+      y
+    );
+
+    ctx.lineTo(
+      width,
+      y
+    );
+
+    ctx.stroke();
+
+  }
+
+
+  if (
+    APP.trajectory.length <
+    2
+  ) {
+
+    return;
+
+  }
+
+
+  const xs =
+    APP.trajectory.map(
+      p => p.x
+    );
+
+
+  const ys =
+    APP.trajectory.map(
+      p => p.y
+    );
+
+
+  const minX =
+    Math.min(...xs);
+
+
+  const maxX =
+    Math.max(...xs);
+
+
+  const minY =
+    Math.min(...ys);
+
+
+  const maxY =
+    Math.max(...ys);
+
+
+  const rangeX =
+    Math.max(
+      .001,
+      maxX - minX
+    );
+
+
+  const rangeY =
+    Math.max(
+      .001,
+      maxY - minY
     );
 
 
   ctx.strokeStyle =
-    "#65e7ff";
+    "#55e6a5";
 
   ctx.lineWidth =
-    2;
+    2.5;
 
   ctx.beginPath();
 
 
-  points.forEach(
+  APP.trajectory.forEach(
     (point, index) => {
 
       const x =
-        point.x *
-        width;
+        (
+          (
+            point.x -
+            minX
+          ) /
+          rangeX
+        ) *
+        (
+          width -
+          30
+        ) +
+        15;
+
 
       const y =
-        point.y *
-        height;
+        (
+          (
+            point.y -
+            minY
+          ) /
+          rangeY
+        ) *
+        (
+          height -
+          30
+        ) +
+        15;
 
 
       if (
@@ -3351,40 +3825,520 @@ function drawTrajectory() {
 
 
 /* =========================================================
-   TIME
+   COMPARISON
 ========================================================= */
 
-function formatTime(
-  seconds
-) {
+function renderComparison() {
+
+  const records =
+    window.SeolcheonEvents
+      ?.getRecords?.() ||
+    [];
+
+
+  const before =
+    records[1];
+
+
+  const after =
+    records[0];
+
+
+  const beforeBox =
+    $("comparisonBefore");
+
+
+  const afterBox =
+    $("comparisonAfter");
+
 
   if (
-    !Number.isFinite(
-      seconds
-    )
+    beforeBox
   ) {
-    return "00:00";
+
+    beforeBox.innerHTML =
+      comparisonHTML(
+        "이전 기록",
+        before
+      );
+
   }
 
 
-  const min =
-    Math.floor(
-      seconds / 60
-    );
+  if (
+    afterBox
+  ) {
 
-  const sec =
-    Math.floor(
-      seconds % 60
-    );
+    afterBox.innerHTML =
+      comparisonHTML(
+        "최근 기록",
+        after
+      );
+
+  }
 
 
-  return `${String(min).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+  const metrics =
+    $("comparisonMetrics");
+
+
+  if (
+    !metrics ||
+    !before ||
+    !after
+  ) {
+
+    if (metrics) {
+
+      metrics.innerHTML =
+        "";
+
+    }
+
+    return;
+
+  }
+
+
+  const difference =
+    Number(after.score) -
+    Number(before.score);
+
+
+  const cls =
+    difference >= 0
+      ? "change-up"
+      : "change-down";
+
+
+  metrics.innerHTML = `
+
+    <div class="comparison-metric">
+
+      <span>
+        점수 변화
+      </span>
+
+      <strong class="${cls}">
+        ${difference >= 0 ? "+" : ""}
+        ${difference}
+      </strong>
+
+    </div>
+
+    <div class="comparison-metric">
+
+      <span>
+        이전 기록
+      </span>
+
+      <strong>
+        ${before.score}
+      </strong>
+
+    </div>
+
+    <div class="comparison-metric">
+
+      <span>
+        최근 기록
+      </span>
+
+      <strong>
+        ${after.score}
+      </strong>
+
+    </div>
+
+  `;
+
+}
+
+
+function comparisonHTML(
+  title,
+  record
+) {
+
+  if (!record) {
+
+    return `
+
+      <div>
+
+        <strong>
+          ${title}
+        </strong>
+
+        <p>
+          비교할 기록이 없습니다.
+        </p>
+
+      </div>
+
+    `;
+
+  }
+
+
+  return `
+
+    <div>
+
+      <strong>
+        ${title}
+      </strong>
+
+      <p>
+        ${record.eventName}
+      </p>
+
+      <b>
+        ${record.score}
+      </b>
+
+      <p>
+        ${record.value}${record.unit}
+      </p>
+
+    </div>
+
+  `;
 
 }
 
 
 /* =========================================================
-   TEXT
+   REPORT
+========================================================= */
+
+function updateReport() {
+
+  const metrics =
+    APP.finalMetrics ||
+    {
+
+      total: 0,
+
+      stability: 0,
+
+      alignment: 0,
+
+      symmetry: 0,
+
+      efficiency: 0
+
+    };
+
+
+  setText(
+    "reportTotalScore",
+    `${metrics.total}/100`
+  );
+
+
+  setText(
+    "reportStability",
+    metrics.stability
+  );
+
+
+  setText(
+    "reportAlignment",
+    metrics.alignment
+  );
+
+
+  setText(
+    "reportSymmetry",
+    metrics.symmetry
+  );
+
+
+  setText(
+    "reportEfficiency",
+    metrics.efficiency
+  );
+
+
+  renderReportRadar();
+
+}
+
+
+/* =========================================================
+   REPORT RADAR
+========================================================= */
+
+function renderReportRadar() {
+
+  const canvas =
+    $("reportRadar");
+
+
+  if (
+    !canvas ||
+    typeof Chart ===
+    "undefined"
+  ) {
+
+    return;
+
+  }
+
+
+  destroyChart(
+    "reportRadar"
+  );
+
+
+  const metrics =
+    APP.finalMetrics ||
+    {
+
+      stability: 0,
+
+      alignment: 0,
+
+      symmetry: 0,
+
+      efficiency: 0
+
+    };
+
+
+  APP.charts.reportRadar =
+    new Chart(
+      canvas,
+      {
+
+        type:
+          "radar",
+
+        data: {
+
+          labels: [
+
+            "안정성",
+
+            "정렬",
+
+            "대칭성",
+
+            "효율",
+
+            "파워",
+
+            "제어"
+
+          ],
+
+          datasets: [
+
+            {
+
+              label:
+                "분석 결과",
+
+              data: [
+
+                metrics.stability,
+
+                metrics.alignment,
+
+                metrics.symmetry,
+
+                metrics.efficiency,
+
+                Math.max(
+                  0,
+                  metrics.total - 5
+                ),
+
+                Math.min(
+                  100,
+                  metrics.total + 3
+                )
+
+              ],
+
+              borderWidth:
+                2,
+
+              backgroundColor:
+                "rgba(101,231,255,.08)"
+
+            }
+
+          ]
+
+        },
+
+        options: {
+
+          responsive:
+            true,
+
+          maintainAspectRatio:
+            false,
+
+          scales: {
+
+            r: {
+
+              min:
+                0,
+
+              max:
+                100,
+
+              ticks: {
+
+                display:
+                  false
+
+              },
+
+              grid: {
+
+                color:
+                  "rgba(255,255,255,.07)"
+
+              },
+
+              angleLines: {
+
+                color:
+                  "rgba(255,255,255,.07)"
+
+              },
+
+              pointLabels: {
+
+                color:
+                  "#8da0b5",
+
+                font: {
+
+                  size:
+                    9
+
+                }
+
+              }
+
+            }
+
+          },
+
+          plugins: {
+
+            legend: {
+
+              display:
+                false
+
+            }
+
+          }
+
+        }
+
+      }
+    );
+
+}
+
+
+/* =========================================================
+   PRINT
+========================================================= */
+
+function initReportPrint() {
+
+  $("printReportButton")
+    ?.addEventListener(
+      "click",
+      () => {
+
+        updateReport();
+
+        window.print();
+
+      }
+    );
+
+}
+
+
+/* =========================================================
+   TOGGLES
+========================================================= */
+
+function initAnalysisToggles() {
+
+  const toggles =
+    qsa(
+      ".analysis-toggles input"
+    );
+
+
+  toggles.forEach(
+    (input, index) => {
+
+      input.addEventListener(
+        "change",
+        () => {
+
+          const keys = [
+
+            "skeleton",
+
+            "angles",
+
+            "trajectory",
+
+            "baseline",
+
+            "center",
+
+            "keyFrames"
+
+          ];
+
+
+          APP.options[
+            keys[index]
+          ] =
+            input.checked;
+
+
+          if (
+            !input.checked &&
+            keys[index] ===
+              "keyFrames"
+          ) {
+
+            APP.keyFrames = [];
+
+            renderKeyFrames();
+
+          }
+
+
+          drawVideoCanvas();
+
+        }
+      );
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   SET TEXT
 ========================================================= */
 
 function setText(
@@ -3395,100 +4349,68 @@ function setText(
   const element =
     $(id);
 
+
   if (element) {
+
     element.textContent =
       value;
+
   }
 
 }
 
 
-function setBar(
-  id,
-  value
+/* =========================================================
+   GET METRIC
+========================================================= */
+
+function getMetricValue(
+  id
 ) {
 
   const element =
     $(id);
 
-  if (element) {
 
-    element.style.width =
-      `${Math.max(
-        0,
-        Math.min(
-          100,
-          Number(value) || 0
-        )
-      )}%`;
-
+  if (!element) {
+    return 0;
   }
+
+
+  return Number(
+    element.textContent
+  ) || 0;
 
 }
 
 
 /* =========================================================
-   TOAST
+   RESIZE
 ========================================================= */
 
-function showToast(
-  message
-) {
+window.addEventListener(
+  "resize",
+  () => {
 
-  const toast =
-    $("toast");
+    setupPoseCanvas();
 
-  if (!toast) {
-    return;
+    drawVideoCanvas();
+
   }
-
-
-  toast.textContent =
-    message;
-
-  toast.classList.add(
-    "show"
-  );
-
-
-  clearTimeout(
-    showToast.timer
-  );
-
-
-  showToast.timer =
-    setTimeout(
-      () => {
-
-        toast.classList.remove(
-          "show"
-        );
-
-      },
-      2300
-    );
-
-}
+);
 
 
 /* =========================================================
-   EVENT ANALYSIS CONNECTION
+   GLOBAL EVENTS
 ========================================================= */
 
 document.addEventListener(
   "eventAnalysisComplete",
   event => {
 
-    const record =
-      event.detail;
+    updateDashboardCharts();
 
-
-    if (!record) {
-      return;
-    }
-
-
-    updateDashboard();
+    renderComparison();
 
   }
 );
@@ -3500,42 +4422,89 @@ document.addEventListener(
 
 function initApp() {
 
-  chartDefaults();
+  updateClock();
 
-  setupNavigation();
+  initNavigation();
 
-  startClock();
+  initVideo();
 
-  setupVideo();
+  initReportPrint();
 
-  setupPose();
+  setupPoseCanvas();
 
-  setupAnalysisToggles();
 
-  setupPrint();
+  /*
+     MediaPipe CDN이 defer로 로드되기 때문에
+     바로 없을 경우 조금 기다렸다가 초기화
+  */
 
-  createAngleChart();
+  let attempts = 0;
 
-  updateDashboard();
 
-  updateScoreUI();
+  const poseTimer =
+    setInterval(
+      () => {
 
-  updateAngleUI();
+        attempts++;
 
-  renderFeedback();
 
-  renderTrainingRecommendations();
+        if (
+          typeof Pose !==
+          "undefined"
+        ) {
+
+          clearInterval(
+            poseTimer
+          );
+
+          initPose();
+
+        }
+
+
+        if (
+          attempts >= 30
+        ) {
+
+          clearInterval(
+            poseTimer
+          );
+
+        }
+
+      },
+      300
+    );
+
+
+  updateDashboardCharts();
+
+  renderComparison();
+
+  updateReport();
 
 
   console.log(
-    "Seolcheon Sports Science PRO initialized."
+    "================================"
+  );
+
+  console.log(
+    "SEOLCHEON SPORTS SCIENCE PRO"
+  );
+
+  console.log(
+    "SYSTEM READY"
+  );
+
+  console.log(
+    "================================"
   );
 
 }
 
 
 /* =========================================================
-   DOM READY
+   START
 ========================================================= */
 
 if (
