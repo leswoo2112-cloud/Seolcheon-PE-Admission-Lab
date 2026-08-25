@@ -2,20 +2,48 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>설천고 스포츠과학 분석센터 PRO</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
-  <link rel="stylesheet" href="style.css">
+  <title>
+    설천고 스포츠과학 분석센터 PRO
+  </title>
 
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta
+    name="theme-color"
+    content="#050a12"
+  >
 
-  <!-- MediaPipe Pose -->
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
+  <!-- =====================================================
+       STYLE
+  ====================================================== -->
 
-  <script defer src="events.js"></script>
-  <script defer src="app.js"></script>
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
+
+  <!-- =====================================================
+       CHART.JS
+  ====================================================== -->
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"
+    defer
+  ></script>
+
+  <!-- =====================================================
+       MEDIAPIPE POSE
+  ====================================================== -->
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"
+    defer
+  ></script>
+
 </head>
 
 <body>
@@ -31,12 +59,19 @@
     <div class="brand">
 
       <div class="brand-mark">
-        SH
+        PRO
       </div>
 
       <div class="brand-text">
-        <strong>설천고</strong>
-        <span>SPORTS SCIENCE PRO</span>
+
+        <strong>
+          설천고
+        </strong>
+
+        <span>
+          SPORTS SCIENCE CENTER
+        </span>
+
       </div>
 
     </div>
@@ -47,57 +82,70 @@
       <button
         class="nav-button active"
         data-page="dashboard"
+        type="button"
       >
         <span class="nav-icon">⌂</span>
         <span>대시보드</span>
       </button>
 
+
       <button
         class="nav-button"
         data-page="athletes"
+        type="button"
       >
-        <span class="nav-icon">👤</span>
+        <span class="nav-icon">♙</span>
         <span>선수 관리</span>
       </button>
+
 
       <button
         class="nav-button"
         data-page="events"
+        type="button"
       >
-        <span class="nav-icon">🎯</span>
+        <span class="nav-icon">🏆</span>
         <span>체대입시</span>
       </button>
+
 
       <button
         class="nav-button"
         data-page="analysis"
+        type="button"
       >
-        <span class="nav-icon">🎥</span>
-        <span>영상 자세분석</span>
+        <span class="nav-icon">◉</span>
+        <span>자세분석</span>
       </button>
+
 
       <button
         class="nav-button"
         data-page="comparison"
+        type="button"
       >
         <span class="nav-icon">⇄</span>
-        <span>비교 분석</span>
+        <span>비교분석</span>
       </button>
+
 
       <button
         class="nav-button"
         data-page="records"
+        type="button"
       >
         <span class="nav-icon">▤</span>
-        <span>분석 기록</span>
+        <span>분석기록</span>
       </button>
+
 
       <button
         class="nav-button"
         data-page="report"
+        type="button"
       >
-        <span class="nav-icon">📋</span>
-        <span>체대입시 리포트</span>
+        <span class="nav-icon">▥</span>
+        <span>리포트</span>
       </button>
 
     </nav>
@@ -110,15 +158,28 @@
         <span class="status-dot"></span>
 
         <div>
-          <strong>SYSTEM STATUS</strong>
-          <small>READY</small>
+
+          <strong>
+            ANALYSIS SYSTEM
+          </strong>
+
+          <small>
+            ONLINE
+          </small>
+
         </div>
 
       </div>
 
+
       <div class="sidebar-school">
-        설천고등학교
-        <small>SEOLCHEON HIGH SCHOOL</small>
+
+        설천고 스포츠과학 훈련센터
+
+        <small>
+          ATHLETE PERFORMANCE LAB
+        </small>
+
       </div>
 
     </div>
@@ -132,14 +193,17 @@
 
   <main class="main-content">
 
-    <!-- HEADER -->
+
+    <!-- ===================================================
+         HEADER
+    ==================================================== -->
 
     <header class="top-header">
 
       <div>
 
         <div class="page-kicker">
-          SEOLCHEON SPORTS SCIENCE
+          SEOLCHEON SPORTS SCIENCE CENTER
         </div>
 
         <h1 id="pageTitle">
@@ -152,12 +216,18 @@
       <div class="header-right">
 
         <div class="header-clock">
+
           <span>●</span>
-          <strong id="clock">--:--:--</strong>
+
+          <strong id="clock">
+            00:00:00
+          </strong>
+
         </div>
 
+
         <div class="header-school">
-          설천고등학교
+          체대입시 분석 시스템
         </div>
 
       </div>
@@ -170,26 +240,28 @@
     ==================================================== -->
 
     <section
-      id="page-dashboard"
       class="page active"
+      id="page-dashboard"
     >
 
       <div class="hero-panel">
 
         <div>
 
-          <span class="hero-label">
-            COLLEGE ADMISSION PERFORMANCE LAB
-          </span>
+          <div class="hero-label">
+            ATHLETE PERFORMANCE ANALYSIS
+          </div>
 
           <h2>
-            체대입시를
-            <span>데이터로 분석하다.</span>
+            체대입시를 위한
+            <span>
+              스포츠과학 분석
+            </span>
           </h2>
 
           <p>
-            실기 기록부터 영상 자세분석,
-            목표 대학까지 한 번에 관리합니다.
+            실기기록 · 자세분석 · 핵심프레임 ·
+            맞춤훈련 · 리포트를 하나의 시스템으로 관리합니다.
           </p>
 
         </div>
@@ -200,15 +272,17 @@
           <button
             class="primary-button"
             data-open-page="events"
+            type="button"
           >
-            🎯 체대입시 분석
+            체대입시 기록 측정
           </button>
 
           <button
             class="secondary-button"
             data-open-page="analysis"
+            type="button"
           >
-            🎥 영상 분석
+            영상 자세분석
           </button>
 
         </div>
@@ -222,12 +296,24 @@
 
         <div class="stat-card">
 
-          <span class="stat-icon">👤</span>
+          <div class="stat-icon">
+            ♙
+          </div>
 
           <div>
-            <small>분석 선수</small>
-            <strong id="athleteCount">0</strong>
-            <span>명</span>
+
+            <small>
+              등록 선수
+            </small>
+
+            <strong id="athleteCount">
+              0
+            </strong>
+
+            <span>
+              명
+            </span>
+
           </div>
 
         </div>
@@ -235,12 +321,24 @@
 
         <div class="stat-card">
 
-          <span class="stat-icon">▤</span>
+          <div class="stat-icon">
+            ◉
+          </div>
 
           <div>
-            <small>분석 기록</small>
-            <strong id="recordCount">0</strong>
-            <span>건</span>
+
+            <small>
+              분석 기록
+            </small>
+
+            <strong id="recordCount">
+              0
+            </strong>
+
+            <span>
+              건
+            </span>
+
           </div>
 
         </div>
@@ -248,12 +346,24 @@
 
         <div class="stat-card">
 
-          <span class="stat-icon">◉</span>
+          <div class="stat-icon">
+            ★
+          </div>
 
           <div>
-            <small>평균 실기점수</small>
-            <strong id="averageScore">0</strong>
-            <span>점</span>
+
+            <small>
+              평균 실기점수
+            </small>
+
+            <strong id="averageScore">
+              0
+            </strong>
+
+            <span>
+              /100
+            </span>
+
           </div>
 
         </div>
@@ -261,16 +371,23 @@
 
         <div class="stat-card">
 
-          <span class="stat-icon">🎓</span>
+          <div class="stat-icon">
+            🎓
+          </div>
 
           <div>
-            <small>목표 대학</small>
+
+            <small>
+              목표 대학
+            </small>
+
             <strong
               id="targetUniversity"
               class="small-stat"
             >
               -
             </strong>
+
           </div>
 
         </div>
@@ -278,60 +395,66 @@
       </div>
 
 
-      <!-- DASHBOARD GRID -->
+      <!-- CHARTS -->
 
       <div class="dashboard-grid">
-
-
-        <!-- PERFORMANCE -->
 
         <div class="panel chart-panel">
 
           <div class="panel-header">
 
             <div>
-              <span class="panel-kicker">
+
+              <div class="panel-kicker">
                 PERFORMANCE
-              </span>
+              </div>
 
               <h3>
-                실기 성과 추이
+                실기 성적 변화
               </h3>
+
             </div>
 
           </div>
 
           <div class="chart-container">
-            <canvas id="performanceChart"></canvas>
+
+            <canvas
+              id="performanceChart"
+            ></canvas>
+
           </div>
 
         </div>
 
-
-        <!-- RADAR -->
 
         <div class="panel chart-panel">
 
           <div class="panel-header">
 
             <div>
-              <span class="panel-kicker">
-                PHYSICAL PROFILE
-              </span>
+
+              <div class="panel-kicker">
+                PERFORMANCE RADAR
+              </div>
 
               <h3>
                 체력 프로파일
               </h3>
+
             </div>
 
           </div>
 
           <div class="chart-container radar">
-            <canvas id="dashboardRadar"></canvas>
+
+            <canvas
+              id="dashboardRadar"
+            ></canvas>
+
           </div>
 
         </div>
-
 
       </div>
 
@@ -343,29 +466,32 @@
         <div class="panel-header">
 
           <div>
-            <span class="panel-kicker">
+
+            <div class="panel-kicker">
               RECENT ANALYSIS
-            </span>
+            </div>
 
             <h3>
               최근 분석
             </h3>
+
           </div>
 
           <button
             class="text-button"
             data-open-page="records"
+            type="button"
           >
-            전체 보기 →
+            전체 기록 →
           </button>
 
         </div>
 
-        <div id="recentAnalysisList">
-          <div class="empty-state">
-            아직 분석 기록이 없습니다.
-          </div>
-        </div>
+
+        <div
+          class="record-list"
+          id="recentAnalysisList"
+        ></div>
 
       </div>
 
@@ -377,20 +503,165 @@
     ==================================================== -->
 
     <section
-      id="page-athletes"
       class="page"
+      id="page-athletes"
     >
 
       <div class="section-title">
 
-        <span>ATHLETE MANAGEMENT</span>
+        <div>
+          선수 관리
+        </div>
 
         <h2>
-          선수 관리
+          선수 등록
         </h2>
+
+        <p>
+          체대입시 실기 및 자세분석에 사용할 선수를 관리합니다.
+        </p>
 
       </div>
 
+
+      <div class="form-panel">
+
+        <div class="panel-kicker">
+          ATHLETE REGISTRATION
+        </div>
+
+
+        <div class="form-grid">
+
+          <div class="input-group">
+
+            <label>
+              선수 이름
+            </label>
+
+            <input
+              id="athleteNameInput"
+              type="text"
+              placeholder="이름"
+            >
+
+          </div>
+
+
+          <div class="input-group">
+
+            <label>
+              학년
+            </label>
+
+            <input
+              id="athleteGradeInput"
+              type="text"
+              placeholder="예: 고3"
+            >
+
+          </div>
+
+
+          <div class="input-group">
+
+            <label>
+              목표 대학
+            </label>
+
+            <input
+              id="athleteUniversityInput"
+              type="text"
+              placeholder="예: ○○대학교"
+            >
+
+          </div>
+
+
+          <div class="input-group">
+
+            <label>
+              목표 학과
+            </label>
+
+            <input
+              id="athleteMajorInput"
+              type="text"
+              placeholder="예: 스포츠과학과"
+            >
+
+          </div>
+
+        </div>
+
+
+        <button
+          class="primary-button"
+          id="addAthleteButton"
+          type="button"
+        >
+          + 선수 등록
+        </button>
+
+      </div>
+
+
+      <div class="panel">
+
+        <div class="panel-header">
+
+          <div>
+
+            <div class="panel-kicker">
+              ATHLETE LIST
+            </div>
+
+            <h3>
+              등록 선수
+            </h3>
+
+          </div>
+
+        </div>
+
+
+        <div
+          class="athlete-list"
+          id="athleteList"
+        ></div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ===================================================
+         COLLEGE / PRACTICAL EVENTS
+    ==================================================== -->
+
+    <section
+      class="page"
+      id="page-events"
+    >
+
+      <div class="section-title">
+
+        <div>
+          COLLEGE ENTRANCE
+        </div>
+
+        <h2>
+          체대입시 실기 분석
+        </h2>
+
+        <p>
+          종목을 선택하고 기록을 입력하면 자동으로 점수와 등급을 계산합니다.
+        </p>
+
+      </div>
+
+
+      <!-- ATHLETE + GOAL -->
 
       <div class="form-panel">
 
@@ -398,36 +669,30 @@
 
           <div class="input-group">
 
-            <label>선수명</label>
+            <label>
+              분석 선수
+            </label>
 
-            <input
-              id="athleteNameInput"
-              type="text"
-              placeholder="선수 이름"
+            <select
+              id="athleteSelect"
+              data-athlete-select
             >
+              <option value="">
+                선수 선택
+              </option>
+            </select>
 
           </div>
 
 
           <div class="input-group">
 
-            <label>학년</label>
+            <label>
+              목표 대학
+            </label>
 
             <input
-              id="athleteGradeInput"
-              type="text"
-              placeholder="예: 고1"
-            >
-
-          </div>
-
-
-          <div class="input-group">
-
-            <label>목표 대학</label>
-
-            <input
-              id="athleteUniversityInput"
+              id="collegeUniversity"
               type="text"
               placeholder="목표 대학"
             >
@@ -437,12 +702,29 @@
 
           <div class="input-group">
 
-            <label>희망 학과</label>
+            <label>
+              목표 학과
+            </label>
 
             <input
-              id="athleteMajorInput"
+              id="collegeMajor"
               type="text"
-              placeholder="체육학과 / 스포츠재활 등"
+              placeholder="목표 학과"
+            >
+
+          </div>
+
+
+          <div class="input-group">
+
+            <label>
+              목표 등급
+            </label>
+
+            <input
+              id="collegeTargetGrade"
+              type="text"
+              placeholder="예: 2등급"
             >
 
           </div>
@@ -451,78 +733,75 @@
 
 
         <button
-          id="addAthleteButton"
           class="primary-button"
+          id="saveCollegeGoal"
+          type="button"
         >
-          + 선수 등록
+          목표 저장
         </button>
 
       </div>
 
 
-      <div
-        id="athleteList"
-        class="athlete-list"
-      ></div>
+      <!-- EVENT ICONS -->
 
-    </section>
+      <div class="panel">
+
+        <div class="panel-header">
+
+          <div>
+
+            <div class="panel-kicker">
+              PRACTICAL EVENTS
+            </div>
+
+            <h3>
+              종목 선택
+            </h3>
+
+          </div>
+
+        </div>
 
 
-    <!-- ===================================================
-         COLLEGE ADMISSION EVENTS
-    ==================================================== -->
-
-    <section
-      id="page-events"
-      class="page"
-    >
-
-      <div class="section-title">
-
-        <span>COLLEGE ADMISSION</span>
-
-        <h2>
-          체대입시 실기 분석
-        </h2>
-
-        <p>
-          종목을 선택하고 기록을 입력하면
-          자동으로 점수와 훈련을 분석합니다.
-        </p>
+        <div
+          class="event-grid"
+          id="eventList"
+        ></div>
 
       </div>
 
 
-      <div
-        id="eventList"
-        class="event-grid"
-      ></div>
+      <!-- SELECTED EVENT -->
 
-
-      <div
-        id="eventMeasurementPanel"
-        class="measurement-panel"
-      >
+      <div class="measurement-panel">
 
         <div class="selected-event">
 
           <div
-            id="selectedEventIcon"
             class="selected-event-icon"
+            id="selectedEventIcon"
           >
             🎯
           </div>
 
+
           <div>
 
-            <span>SELECTED EVENT</span>
+            <span>
+              SELECTED EVENT
+            </span>
 
-            <h3 id="selectedEventName">
+            <h3
+              id="selectedEventName"
+            >
               종목을 선택하세요
             </h3>
 
-            <p id="selectedEventDescription">
-              체대입시 실기 종목을 선택해주세요.
+            <p
+              id="selectedEventDescription"
+            >
+              위의 픽토그램에서 종목을 선택하세요.
             </p>
 
           </div>
@@ -547,7 +826,9 @@
                 placeholder="기록 입력"
               >
 
-              <span id="selectedEventUnit">
+              <span
+                id="selectedEventUnit"
+              >
                 -
               </span>
 
@@ -559,19 +840,56 @@
           <div>
 
             <label>
-              선수
+              기준
             </label>
 
-            <select
-              id="athleteSelect"
-              data-athlete-select
-            >
+            <div class="target-records">
 
-              <option value="">
-                선수 선택
-              </option>
+              <div>
 
-            </select>
+                <span>
+                  우수
+                </span>
+
+                <strong
+                  id="eventExcellent"
+                >
+                  -
+                </strong>
+
+              </div>
+
+
+              <div>
+
+                <span>
+                  양호
+                </span>
+
+                <strong
+                  id="eventGood"
+                >
+                  -
+                </strong>
+
+              </div>
+
+
+              <div>
+
+                <span>
+                  평균
+                </span>
+
+                <strong
+                  id="eventAverage"
+                >
+                  -
+                </strong>
+
+              </div>
+
+            </div>
 
           </div>
 
@@ -579,8 +897,9 @@
           <div class="measurement-action">
 
             <button
-              id="submitEventMeasurement"
               class="primary-button"
+              id="submitEventMeasurement"
+              type="button"
             >
               기록 분석
             </button>
@@ -596,9 +915,28 @@
 
           <div>
 
-            <small>RESULT</small>
+            <small>
+              측정기록
+            </small>
 
-            <strong id="eventScore">
+            <strong
+              id="eventValue"
+            >
+              -
+            </strong>
+
+          </div>
+
+
+          <div>
+
+            <small>
+              점수
+            </small>
+
+            <strong
+              id="eventScore"
+            >
               0/100
             </strong>
 
@@ -607,31 +945,26 @@
 
           <div>
 
-            <small>등급</small>
+            <small>
+              등급
+            </small>
 
-            <strong id="eventGrade">
+            <strong
+              id="eventGrade"
+            >
               -
             </strong>
 
           </div>
 
 
-          <div>
-
-            <small>기록</small>
-
-            <strong id="eventValue">
-              -
-            </strong>
-
-          </div>
-
-
-          <div class="score-progress">
+          <div
+            class="score-progress"
+          >
 
             <div
-              id="eventScoreBar"
               class="score-progress-bar"
+              id="eventScoreBar"
             ></div>
 
           </div>
@@ -639,56 +972,26 @@
         </div>
 
 
-        <!-- TARGET -->
+        <!-- TRAINING -->
 
-        <div class="target-records">
+        <div class="panel-inner">
 
-          <div>
-            <span>우수 기준</span>
-            <strong id="eventExcellent">-</strong>
+          <div class="panel-kicker">
+            RECOMMENDED TRAINING
           </div>
 
-          <div>
-            <span>양호 기준</span>
-            <strong id="eventGood">-</strong>
-          </div>
-
-          <div>
-            <span>평균 기준</span>
-            <strong id="eventAverage">-</strong>
-          </div>
-
-        </div>
-
-
-        <!-- RECOMMENDATION -->
-
-        <div class="recommendation-section">
-
-          <div class="panel-header">
-
-            <div>
-
-              <span class="panel-kicker">
-                TRAINING RECOMMENDATION
-              </span>
-
-              <h3>
-                추천 훈련
-              </h3>
-
-            </div>
-
-          </div>
+          <h3>
+            맞춤 훈련
+          </h3>
 
 
           <div
-            id="eventRecommendations"
             class="recommendation-list"
+            id="eventRecommendations"
           >
 
             <div class="empty-state">
-              기록을 분석하면 추천훈련이 표시됩니다.
+              종목을 선택하면 추천 훈련이 표시됩니다.
             </div>
 
           </div>
@@ -705,17 +1008,23 @@
     ==================================================== -->
 
     <section
-      id="page-analysis"
       class="page"
+      id="page-analysis"
     >
 
       <div class="section-title">
 
-        <span>VIDEO LAB</span>
+        <div>
+          MOTION ANALYSIS
+        </div>
 
         <h2>
           영상 자세분석
         </h2>
+
+        <p>
+          영상에서 신체 관절을 추적하고 관절각·기준선·중심·핵심프레임을 분석합니다.
+        </p>
 
       </div>
 
@@ -723,12 +1032,9 @@
       <div class="analysis-layout">
 
 
-        <!-- LEFT -->
+        <!-- VIDEO -->
 
         <div class="analysis-main">
-
-
-          <!-- VIDEO -->
 
           <div class="panel video-panel">
 
@@ -736,34 +1042,31 @@
 
               <div>
 
-                <span class="panel-kicker">
-                  MOTION ANALYSIS
-                </span>
+                <div class="panel-kicker">
+                  VIDEO ANALYSIS
+                </div>
 
                 <h3>
-                  영상 분석
+                  선수 움직임 분석
                 </h3>
 
               </div>
 
 
-              <div>
+              <button
+                class="secondary-button"
+                id="uploadVideoButton"
+                type="button"
+              >
+                영상 불러오기
+              </button>
 
-                <input
-                  id="videoInput"
-                  type="file"
-                  accept="video/*"
-                  hidden
-                >
-
-                <button
-                  id="uploadVideoButton"
-                  class="secondary-button"
-                >
-                  영상 업로드
-                </button>
-
-              </div>
+              <input
+                id="videoInput"
+                type="file"
+                accept="video/*"
+                hidden
+              >
 
             </div>
 
@@ -773,31 +1076,31 @@
               <video
                 id="analysisVideo"
                 playsinline
-                controls
+                preload="metadata"
               ></video>
 
 
               <canvas
-                id="poseCanvas"
                 class="pose-canvas"
+                id="poseCanvas"
               ></canvas>
 
 
               <div
-                id="videoPlaceholder"
                 class="video-placeholder"
+                id="videoPlaceholder"
               >
 
                 <div>
-                  🎥
+                  ◉
                 </div>
 
                 <strong>
-                  분석할 영상을 업로드하세요
+                  분석할 영상을 불러오세요
                 </strong>
 
                 <span>
-                  체대입시 실기 동작을 촬영한 영상을 권장합니다.
+                  MP4 / MOV / WebM
                 </span>
 
               </div>
@@ -810,58 +1113,69 @@
             <div class="video-tools">
 
               <button
-                id="videoPrevFrame"
                 class="icon-button"
+                id="videoPrevFrame"
+                type="button"
               >
                 ◀
               </button>
 
+
               <button
+                class="icon-button"
                 id="videoPlayPause"
-                class="icon-button"
+                type="button"
               >
                 ▶
               </button>
 
+
               <button
+                class="icon-button"
                 id="videoNextFrame"
-                class="icon-button"
+                type="button"
               >
                 ▶
               </button>
 
 
               <button
-                id="videoSlow"
                 class="speed-button"
+                id="videoSlow"
+                type="button"
               >
-                0.5x
+                0.5×
               </button>
 
+
               <button
-                id="videoNormal"
                 class="speed-button active"
+                id="videoNormal"
+                type="button"
               >
-                1.0x
+                1×
               </button>
 
             </div>
 
 
-            <!-- MAIN BUTTONS -->
+            <!-- ANALYSIS BUTTON -->
 
             <div class="analysis-buttons">
 
               <button
-                id="startAnalysis"
                 class="analysis-start"
+                id="startAnalysis"
+                type="button"
               >
-                ● 분석 시작
+                ▶ 자세분석 시작
               </button>
 
+
               <button
-                id="stopAnalysis"
                 class="analysis-stop"
+                id="stopAnalysis"
+                type="button"
               >
                 ■ 분석 종료
               </button>
@@ -869,7 +1183,7 @@
             </div>
 
 
-            <!-- TOGGLES -->
+            <!-- OPTIONS -->
 
             <div class="analysis-toggles">
 
@@ -878,99 +1192,114 @@
                   type="checkbox"
                   checked
                 >
-                <span>스켈레톤</span>
+                스켈레톤
               </label>
+
 
               <label>
                 <input
                   type="checkbox"
                   checked
                 >
-                <span>관절각</span>
+                관절각
               </label>
+
 
               <label>
                 <input
                   type="checkbox"
                   checked
                 >
-                <span>관절 궤적</span>
+                관절 궤적
               </label>
+
 
               <label>
                 <input
                   type="checkbox"
                   checked
                 >
-                <span>기준선</span>
+                기준선
               </label>
+
 
               <label>
                 <input
                   type="checkbox"
                   checked
                 >
-                <span>신체 중심</span>
+                신체 중심
               </label>
+
 
               <label>
                 <input
                   type="checkbox"
                   checked
                 >
-                <span>자동 핵심프레임</span>
+                자동 핵심프레임
               </label>
 
             </div>
 
+          </div>
 
-            <!-- TRAJECTORY -->
 
-            <div class="panel-inner">
+          <!-- TRAJECTORY -->
 
-              <div class="panel-header">
+          <div class="panel">
 
-                <div>
-                  <span class="panel-kicker">
-                    MOVEMENT PATH
-                  </span>
+            <div class="panel-header">
 
-                  <h3>
-                    관절 궤적 / 신체 중심
-                  </h3>
+              <div>
+
+                <div class="panel-kicker">
+                  MOVEMENT TRAJECTORY
                 </div>
 
+                <h3>
+                  신체 중심 궤적
+                </h3>
+
               </div>
+
+            </div>
+
+
+            <canvas
+              class="trajectory-canvas"
+              id="trajectoryCanvas"
+            ></canvas>
+
+          </div>
+
+
+          <!-- ANGLE CHART -->
+
+          <div class="panel">
+
+            <div class="panel-header">
+
+              <div>
+
+                <div class="panel-kicker">
+                  JOINT ANGLE
+                </div>
+
+                <h3>
+                  관절각 변화
+                </h3>
+
+              </div>
+
+            </div>
+
+
+            <div class="angle-chart-container">
 
               <canvas
-                id="trajectoryCanvas"
-                class="trajectory-canvas"
+                id="angleChart"
               ></canvas>
-
-            </div>
-
-
-            <!-- ANGLE GRAPH -->
-
-            <div class="panel-inner">
-
-              <div class="panel-header">
-
-                <div>
-                  <span class="panel-kicker">
-                    JOINT ANGLE GRAPH
-                  </span>
-
-                  <h3>
-                    관절각 변화
-                  </h3>
-                </div>
-
-              </div>
-
-              <div class="angle-chart-container">
-                <canvas id="angleChart"></canvas>
-              </div>
 
             </div>
 
@@ -979,7 +1308,7 @@
         </div>
 
 
-        <!-- RIGHT -->
+        <!-- ANALYSIS SIDEBAR -->
 
         <aside class="analysis-sidebar">
 
@@ -988,26 +1317,30 @@
 
           <div class="panel score-panel">
 
-            <span class="panel-kicker">
-              ANALYSIS SCORE
-            </span>
+            <div class="panel-kicker">
+              MOTION SCORE
+            </div>
 
-            <strong id="analysisTotalScore">
-              0 / 100
-            </strong>
-
-            <div class="score-circle">
+            <div
+              class="score-circle"
+            >
 
               <span>
-                SCORE
+                MOTION
               </span>
 
             </div>
 
+            <strong
+              id="analysisTotalScore"
+            >
+              0 / 100
+            </strong>
+
           </div>
 
 
-          <!-- JOINT ANGLE -->
+          <!-- ANGLES -->
 
           <div class="panel">
 
@@ -1015,12 +1348,12 @@
 
               <div>
 
-                <span class="panel-kicker">
-                  JOINT ANGLE ANALYSIS
-                </span>
+                <div class="panel-kicker">
+                  JOINT ANGLES
+                </div>
 
                 <h3>
-                  관절각 실시간 데이터
+                  실시간 관절각
                 </h3>
 
               </div>
@@ -1033,10 +1366,27 @@
               <div class="angle-card hip">
 
                 <span>
-                  고관절 (좌)
+                  좌측 고관절
                 </span>
 
-                <strong id="leftHipAngle">
+                <strong
+                  id="leftHipAngle"
+                >
+                  0°
+                </strong>
+
+              </div>
+
+
+              <div class="angle-card hip">
+
+                <span>
+                  우측 고관절
+                </span>
+
+                <strong
+                  id="rightHipAngle"
+                >
                   0°
                 </strong>
 
@@ -1046,10 +1396,27 @@
               <div class="angle-card knee">
 
                 <span>
-                  무릎 (좌)
+                  좌측 무릎
                 </span>
 
-                <strong id="leftKneeAngle">
+                <strong
+                  id="leftKneeAngle"
+                >
+                  0°
+                </strong>
+
+              </div>
+
+
+              <div class="angle-card knee">
+
+                <span>
+                  우측 무릎
+                </span>
+
+                <strong
+                  id="rightKneeAngle"
+                >
                   0°
                 </strong>
 
@@ -1059,10 +1426,27 @@
               <div class="angle-card ankle">
 
                 <span>
-                  발목 (좌)
+                  좌측 발목
                 </span>
 
-                <strong id="rightKneeAngle">
+                <strong
+                  id="leftAnkleAngle"
+                >
+                  0°
+                </strong>
+
+              </div>
+
+
+              <div class="angle-card ankle">
+
+                <span>
+                  우측 발목
+                </span>
+
+                <strong
+                  id="rightAnkleAngle"
+                >
                   0°
                 </strong>
 
@@ -1074,28 +1458,47 @@
             <div class="angle-extra">
 
               <div>
-                우측 고관절
-                <strong id="rightHipAngle">0°</strong>
+
+                <span>
+                  좌측 팔꿈치
+                </span>
+
+                <strong
+                  id="leftElbowAngle"
+                >
+                  0°
+                </strong>
+
               </div>
 
-              <div>
-                우측 무릎
-                <strong id="rightKneeAngle2">0°</strong>
-              </div>
 
               <div>
-                좌측 팔꿈치
-                <strong id="leftElbowAngle">0°</strong>
+
+                <span>
+                  우측 팔꿈치
+                </span>
+
+                <strong
+                  id="rightElbowAngle"
+                >
+                  0°
+                </strong>
+
               </div>
 
-              <div>
-                우측 팔꿈치
-                <strong id="rightElbowAngle">0°</strong>
-              </div>
 
               <div>
-                몸통
-                <strong id="trunkAngle">0°</strong>
+
+                <span>
+                  몸통 기울기
+                </span>
+
+                <strong
+                  id="trunkAngle"
+                >
+                  0°
+                </strong>
+
               </div>
 
             </div>
@@ -1105,18 +1508,18 @@
 
           <!-- BASELINE -->
 
-          <div class="panel baseline-panel">
+          <div class="panel">
 
             <div class="panel-header">
 
               <div>
 
-                <span class="panel-kicker">
-                  REFERENCE LINE
-                </span>
+                <div class="panel-kicker">
+                  REFERENCE
+                </div>
 
                 <h3>
-                  기준선 비교
+                  기준선
                 </h3>
 
               </div>
@@ -1127,27 +1530,54 @@
             <div class="baseline-list">
 
               <div>
+
                 <span class="baseline-dot hip-dot"></span>
-                고관절 기준
-                <strong>160°</strong>
+
+                몸통축
+
+                <strong>
+                  Shoulder → Hip
+                </strong>
+
               </div>
 
+
               <div>
+
                 <span class="baseline-dot knee-dot"></span>
-                무릎 기준
-                <strong>120°</strong>
+
+                무릎축
+
+                <strong>
+                  Hip → Knee → Ankle
+                </strong>
+
               </div>
 
+
               <div>
+
                 <span class="baseline-dot ankle-dot"></span>
-                발목 기준
-                <strong>90°</strong>
+
+                발목축
+
+                <strong>
+                  Knee → Ankle
+                </strong>
+
               </div>
 
+
               <div>
+
                 <span class="baseline-dot vertical-dot"></span>
-                수직 정렬선
-                <strong>ON</strong>
+
+                수직 기준선
+
+                <strong>
+                  Center Axis
+                </strong>
+
               </div>
 
             </div>
@@ -1155,7 +1585,7 @@
           </div>
 
 
-          <!-- METRICS -->
+          <!-- SCORE METRICS -->
 
           <div class="panel">
 
@@ -1163,12 +1593,12 @@
 
               <div>
 
-                <span class="panel-kicker">
+                <div class="panel-kicker">
                   PERFORMANCE
-                </span>
+                </div>
 
                 <h3>
-                  퍼포먼스 지표
+                  자세 지표
                 </h3>
 
               </div>
@@ -1180,14 +1610,20 @@
 
               <div class="metric-row">
 
-                <span>안정성</span>
+                <span>
+                  안정성
+                </span>
 
-                <strong id="stabilityScore">
+                <strong
+                  id="stabilityScore"
+                >
                   0
                 </strong>
 
                 <div class="metric-bar">
-                  <i id="stabilityBar"></i>
+                  <i
+                    id="stabilityBar"
+                  ></i>
                 </div>
 
               </div>
@@ -1195,14 +1631,20 @@
 
               <div class="metric-row">
 
-                <span>정렬</span>
+                <span>
+                  정렬
+                </span>
 
-                <strong id="alignmentScore">
+                <strong
+                  id="alignmentScore"
+                >
                   0
                 </strong>
 
                 <div class="metric-bar">
-                  <i id="alignmentBar"></i>
+                  <i
+                    id="alignmentBar"
+                  ></i>
                 </div>
 
               </div>
@@ -1210,14 +1652,20 @@
 
               <div class="metric-row">
 
-                <span>대칭성</span>
+                <span>
+                  대칭성
+                </span>
 
-                <strong id="symmetryScore">
+                <strong
+                  id="symmetryScore"
+                >
                   0
                 </strong>
 
                 <div class="metric-bar">
-                  <i id="symmetryBar"></i>
+                  <i
+                    id="symmetryBar"
+                  ></i>
                 </div>
 
               </div>
@@ -1225,14 +1673,20 @@
 
               <div class="metric-row">
 
-                <span>효율성</span>
+                <span>
+                  효율
+                </span>
 
-                <strong id="efficiencyScore">
+                <strong
+                  id="efficiencyScore"
+                >
                   0
                 </strong>
 
                 <div class="metric-bar">
-                  <i id="efficiencyBar"></i>
+                  <i
+                    id="efficiencyBar"
+                  ></i>
                 </div>
 
               </div>
@@ -1250,29 +1704,32 @@
 
               <div>
 
-                <span class="panel-kicker">
-                  AUTOMATIC KEY FRAMES
-                </span>
+                <div class="panel-kicker">
+                  AUTO KEY FRAMES
+                </div>
 
                 <h3>
-                  자동 핵심 프레임
-                  <small>
-                    Best <span id="keyFrameCount">0</span>
-                  </small>
+                  핵심 프레임
                 </h3>
 
               </div>
+
+              <strong
+                id="keyFrameCount"
+              >
+                0
+              </strong>
 
             </div>
 
 
             <div
-              id="keyFrameList"
               class="key-frame-list"
+              id="keyFrameList"
             >
 
               <div class="empty-state">
-                분석 후 자동으로 핵심 프레임이 추출됩니다.
+                분석 후 자동 추출됩니다.
               </div>
 
             </div>
@@ -1292,9 +1749,9 @@
 
           <div>
 
-            <span class="panel-kicker">
-              AI FEEDBACK
-            </span>
+            <div class="panel-kicker">
+              AI COACH
+            </div>
 
             <h3>
               자세 분석 피드백
@@ -1306,12 +1763,12 @@
 
 
         <div
-          id="analysisFeedback"
           class="feedback-list"
+          id="analysisFeedback"
         >
 
           <div class="empty-state">
-            영상을 분석하면 자동 피드백이 표시됩니다.
+            영상을 분석하면 자동으로 피드백이 생성됩니다.
           </div>
 
         </div>
@@ -1327,12 +1784,12 @@
 
           <div>
 
-            <span class="panel-kicker">
-              TRAINING
-            </span>
+            <div class="panel-kicker">
+              TRAINING RECOMMENDATION
+            </div>
 
             <h3>
-              맞춤 추천훈련
+              맞춤 훈련 추천
             </h3>
 
           </div>
@@ -1341,9 +1798,15 @@
 
 
         <div
-          id="trainingRecommendations"
           class="training-grid"
-        ></div>
+          id="trainingRecommendations"
+        >
+
+          <div class="empty-state">
+            자세분석 후 맞춤 훈련이 추천됩니다.
+          </div>
+
+        </div>
 
       </div>
 
@@ -1355,37 +1818,23 @@
     ==================================================== -->
 
     <section
-      id="page-comparison"
       class="page"
+      id="page-comparison"
     >
 
       <div class="section-title">
 
-        <span>COMPARISON LAB</span>
+        <div>
+          PERFORMANCE COMPARISON
+        </div>
 
         <h2>
-          기록 비교 분석
+          기록 비교
         </h2>
 
-      </div>
-
-
-      <div class="form-panel">
-
-        <label>
-          비교 선수
-        </label>
-
-        <select
-          id="comparisonAthlete"
-          data-athlete-select
-        >
-
-          <option value="">
-            전체 기록
-          </option>
-
-        </select>
+        <p>
+          이전 기록과 최근 기록의 변화를 확인합니다.
+        </p>
 
       </div>
 
@@ -1393,32 +1842,51 @@
       <div class="comparison-grid">
 
         <div
-          id="comparisonBefore"
           class="panel comparison-card"
+          id="comparisonBefore"
         >
-          이전 기록
+
+          <div>
+
+            <strong>
+              이전 기록
+            </strong>
+
+            <p>
+              분석 기록이 쌓이면 표시됩니다.
+            </p>
+
+          </div>
+
         </div>
 
+
         <div
-          id="comparisonAfter"
           class="panel comparison-card"
+          id="comparisonAfter"
         >
-          현재 기록
+
+          <div>
+
+            <strong>
+              최근 기록
+            </strong>
+
+            <p>
+              분석 기록이 쌓이면 표시됩니다.
+            </p>
+
+          </div>
+
         </div>
 
       </div>
 
 
       <div
+        class="comparison-metrics"
         id="comparisonMetrics"
-        class="panel comparison-metrics"
-      >
-
-        <div class="empty-state">
-          비교할 기록을 선택하세요.
-        </div>
-
-      </div>
+      ></div>
 
     </section>
 
@@ -1428,25 +1896,52 @@
     ==================================================== -->
 
     <section
-      id="page-records"
       class="page"
+      id="page-records"
     >
 
       <div class="section-title">
 
-        <span>ANALYSIS HISTORY</span>
+        <div>
+          ANALYSIS RECORDS
+        </div>
 
         <h2>
           분석 기록
         </h2>
 
+        <p>
+          체대입시 실기 측정 결과를 저장하고 확인합니다.
+        </p>
+
       </div>
 
 
-      <div
-        id="recordList"
-        class="record-list"
-      ></div>
+      <div class="panel">
+
+        <div class="panel-header">
+
+          <div>
+
+            <div class="panel-kicker">
+              SAVED RECORDS
+            </div>
+
+            <h3>
+              전체 기록
+            </h3>
+
+          </div>
+
+        </div>
+
+
+        <div
+          class="record-list"
+          id="recordList"
+        ></div>
+
+      </div>
 
     </section>
 
@@ -1456,132 +1951,45 @@
     ==================================================== -->
 
     <section
-      id="page-report"
       class="page"
+      id="page-report"
     >
 
       <div class="section-title">
 
-        <span>COLLEGE ADMISSION REPORT</span>
+        <div>
+          COLLEGE ENTRANCE REPORT
+        </div>
 
         <h2>
           체대입시 분석 리포트
         </h2>
 
-      </div>
-
-
-      <!-- GOAL -->
-
-      <div class="panel">
-
-        <div class="panel-header">
-
-          <div>
-
-            <span class="panel-kicker">
-              TARGET UNIVERSITY
-            </span>
-
-            <h3>
-              목표 대학 설정
-            </h3>
-
-          </div>
-
-        </div>
-
-
-        <div class="form-grid">
-
-          <div class="input-group">
-
-            <label>
-              목표 대학
-            </label>
-
-            <input
-              id="collegeUniversity"
-              type="text"
-              placeholder="대학명"
-            >
-
-          </div>
-
-
-          <div class="input-group">
-
-            <label>
-              목표 학과
-            </label>
-
-            <input
-              id="collegeMajor"
-              type="text"
-              placeholder="학과"
-            >
-
-          </div>
-
-
-          <div class="input-group">
-
-            <label>
-              전형
-            </label>
-
-            <input
-              id="collegeAdmission"
-              type="text"
-              placeholder="학생부 + 실기"
-            >
-
-          </div>
-
-
-          <div class="input-group">
-
-            <label>
-              목표 등급
-            </label>
-
-            <input
-              id="collegeTargetGrade"
-              type="text"
-              placeholder="예: 2.7"
-            >
-
-          </div>
-
-        </div>
-
-
-        <button
-          id="saveCollegeGoal"
-          class="primary-button"
-        >
-          목표 저장
-        </button>
+        <p>
+          실기기록과 자세분석 결과를 하나의 선수 리포트로 정리합니다.
+        </p>
 
       </div>
 
-
-      <!-- REPORT SCORE -->
 
       <div class="report-grid">
 
-        <div class="panel report-score">
+        <div
+          class="panel report-score"
+        >
 
-          <span class="panel-kicker">
-            TOTAL PERFORMANCE
-          </span>
+          <div class="panel-kicker">
+            TOTAL
+          </div>
 
-          <strong id="reportTotalScore">
+          <strong
+            id="reportTotalScore"
+          >
             0/100
           </strong>
 
           <p>
-            현재 종합 분석 점수
+            종합 자세분석 점수
           </p>
 
         </div>
@@ -1589,11 +1997,13 @@
 
         <div class="panel">
 
-          <span class="panel-kicker">
+          <div class="panel-kicker">
             STABILITY
-          </span>
+          </div>
 
-          <strong id="reportStability">
+          <strong
+            id="reportStability"
+          >
             0
           </strong>
 
@@ -1606,11 +2016,13 @@
 
         <div class="panel">
 
-          <span class="panel-kicker">
+          <div class="panel-kicker">
             ALIGNMENT
-          </span>
+          </div>
 
-          <strong id="reportAlignment">
+          <strong
+            id="reportAlignment"
+          >
             0
           </strong>
 
@@ -1623,11 +2035,13 @@
 
         <div class="panel">
 
-          <span class="panel-kicker">
+          <div class="panel-kicker">
             SYMMETRY
-          </span>
+          </div>
 
-          <strong id="reportSymmetry">
+          <strong
+            id="reportSymmetry"
+          >
             0
           </strong>
 
@@ -1640,16 +2054,18 @@
 
         <div class="panel">
 
-          <span class="panel-kicker">
+          <div class="panel-kicker">
             EFFICIENCY
-          </span>
+          </div>
 
-          <strong id="reportEfficiency">
+          <strong
+            id="reportEfficiency"
+          >
             0
           </strong>
 
           <p>
-            효율성
+            효율
           </p>
 
         </div>
@@ -1657,106 +2073,77 @@
       </div>
 
 
-      <!-- REPORT RADAR -->
+      <div class="dashboard-grid">
 
-      <div class="panel chart-panel">
+        <div class="panel">
 
-        <div class="panel-header">
+          <div class="panel-header">
 
-          <div>
+            <div>
 
-            <span class="panel-kicker">
-              PERFORMANCE PROFILE
-            </span>
+              <div class="panel-kicker">
+                ATHLETE PROFILE
+              </div>
 
-            <h3>
-              체력·실기 프로파일
-            </h3>
+              <h3>
+                체력 프로파일
+              </h3>
+
+            </div>
+
+          </div>
+
+
+          <div class="chart-container radar">
+
+            <canvas
+              id="reportRadar"
+            ></canvas>
 
           </div>
 
         </div>
 
 
-        <div class="chart-container radar">
-          <canvas id="reportRadar"></canvas>
-        </div>
+        <div class="panel">
 
-      </div>
+          <div class="panel-header">
 
+            <div>
 
-      <!-- FEEDBACK -->
+              <div class="panel-kicker">
+                COACH FEEDBACK
+              </div>
 
-      <div class="panel">
+              <h3>
+                코칭 의견
+              </h3>
 
-        <div class="panel-header">
-
-          <div>
-
-            <span class="panel-kicker">
-              REPORT FEEDBACK
-            </span>
-
-            <h3>
-              종합 피드백
-            </h3>
+            </div>
 
           </div>
 
-        </div>
 
-
-        <div
-          id="feedbackList"
-          class="feedback-list"
-        >
-
-          <div class="empty-state">
-            분석 후 자동으로 생성됩니다.
-          </div>
+          <div
+            class="feedback-list"
+            id="feedbackList"
+          ></div>
 
         </div>
-
-      </div>
-
-
-      <!-- TRAINING -->
-
-      <div class="panel">
-
-        <div class="panel-header">
-
-          <div>
-
-            <span class="panel-kicker">
-              RECOMMENDED PROGRAM
-            </span>
-
-            <h3>
-              추천 훈련 프로그램
-            </h3>
-
-          </div>
-
-        </div>
-
-
-        <div
-          id="recommendedTraining"
-          class="training-grid"
-        ></div>
 
       </div>
 
 
       <button
-        id="printReportButton"
         class="primary-button report-print"
+        id="printReportButton"
+        type="button"
       >
-        🖨 리포트 출력
+        리포트 인쇄
       </button>
 
     </section>
+
 
   </main>
 
@@ -1768,9 +2155,24 @@
 ======================================================== -->
 
 <div
-  id="toast"
   class="toast"
+  id="toast"
 ></div>
+
+
+<!-- =======================================================
+     JAVASCRIPT
+======================================================== -->
+
+<script
+  src="events.js"
+  defer
+></script>
+
+<script
+  src="app.js"
+  defer
+></script>
 
 
 </body>
